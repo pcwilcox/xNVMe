@@ -1,0 +1,17 @@
+#include <{{ declr["hdr_fname"] }}>
+
+{% for ent in declr["ents"] if ent["kind"] == "g" -%}
+const char *
+{{ ent["name"] }}_str(enum {{ ent["name"] }} eval)
+{
+	switch (eval) {
+	{% for sym_name, sym_name_short in ent["members"] -%}
+	case {{ sym_name }}:
+		return "{{ sym_name_short }}";
+	{% endfor -%}
+	}
+
+	return "ENOSYS";
+}
+
+{% endfor %}
