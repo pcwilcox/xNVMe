@@ -17,12 +17,12 @@ Enums
 =====
 
 
-.. _sec-c-api-xnvme-enum-xnvme_async_opts:
+.. _sec-c-api-xnvme-enum-xnvme_queue_opts:
 
-xnvme_async_opts
+xnvme_queue_opts
 ----------------
 
-.. doxygenenum:: xnvme_async_opts
+.. doxygenenum:: xnvme_queue_opts
 
 
 .. _sec-c-api-xnvme-enum-xnvme_cmd_opts:
@@ -154,7 +154,7 @@ XNVME_MIN
 xnvme_async_get_depth
 ---------------------
 
-.. doxygenfunction:: xnvme_async_get_depth
+.. doxygenfunction:: xnvme_queue_get_depth
 
 
 .. _sec-c-api-xnvme-func-xnvme_async_get_outstanding:
@@ -162,7 +162,7 @@ xnvme_async_get_depth
 xnvme_async_get_outstanding
 ---------------------------
 
-.. doxygenfunction:: xnvme_async_get_outstanding
+.. doxygenfunction:: xnvme_queue_get_outstanding
 
 
 .. _sec-c-api-xnvme-func-xnvme_async_init:
@@ -170,7 +170,7 @@ xnvme_async_get_outstanding
 xnvme_async_init
 ----------------
 
-.. doxygenfunction:: xnvme_async_init
+.. doxygenfunction:: xnvme_queue_init
 
 
 .. _sec-c-api-xnvme-func-xnvme_async_poke:
@@ -178,7 +178,7 @@ xnvme_async_init
 xnvme_async_poke
 ----------------
 
-.. doxygenfunction:: xnvme_async_poke
+.. doxygenfunction:: xnvme_queue_poke
 
 
 .. _sec-c-api-xnvme-func-xnvme_async_term:
@@ -186,7 +186,7 @@ xnvme_async_poke
 xnvme_async_term
 ----------------
 
-.. doxygenfunction:: xnvme_async_term
+.. doxygenfunction:: xnvme_queue_term
 
 
 .. _sec-c-api-xnvme-func-xnvme_async_wait:
@@ -194,7 +194,7 @@ xnvme_async_term
 xnvme_async_wait
 ----------------
 
-.. doxygenfunction:: xnvme_async_wait
+.. doxygenfunction:: xnvme_queue_wait
 
 
 .. _sec-c-api-xnvme-func-xnvme_be_attr_fpr:
