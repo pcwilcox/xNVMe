@@ -13,11 +13,30 @@
 /**
  * Produces a string representation of the given ::{{ ent["name"] }}
  *
- * @param eval the enum value to produce a string representation of
+ * @param obj the enum value to produce a string representation of
  * @return On success, a string representation is returned. On error, the string
  * "ENOSYS" is returned.
  */
 const char *
-{{ ent["name"] }}_str(enum {{ ent["name"] }} eval);
+{{ ent["name"] }}_str(enum {{ ent["name"] }} obj);
+{% endfor %}
+{% for struct in structs %}
+/**
+ * Prints the given ::{{ struct["name"] }} to the given 'stream'
+ *
+ * @param obj Pointer to the ::{{ struct["name"] }} to print
+ * @param opts Printer options
+ */
+int
+{{ struct["name"] }}_fpr(FILE *stream, const struct {{ struct["name"] }} *obj, int opts);
+
+/**
+ * Prints the given ::{{ struct["name"] }} to stdout
+ *
+ * @param obj Pointer to the ::{{ struct["name"] }} to print
+ * @param opts Printer options
+ */
+int
+{{ struct["name"] }}_pr(const struct {{ struct["name"] }} *obj, int opts);
 {% endfor %}
 #endif /* __{{ declr["hdr_name"] }}_H */

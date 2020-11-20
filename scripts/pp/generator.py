@@ -8,7 +8,16 @@ import argparse
 import logging
 import sys
 import os
-import jinja2
+try:
+    import jinja2
+except ImportError:
+    print("Please install jinja2")
+    sys.exit(1)
+try:
+    import yaml
+except Importerror:
+    print("Please install yaml")
+    sys.exit(1)
 
 def expand_path(path):
     """Expands variables from the given path and turns it into absolute path"""
@@ -200,16 +209,27 @@ def main(args):
     # Load and convert ctags to declaration-dict
     tags = tags_from_file(ctags_fpath)
     declr = tags_to_declr(args, tags)
+    fmt = yaml.load(open(args.fmt), Loader=yaml.Loader)
+    fmt["structs"] = [d for d in fmt["structs"] if d["name"].startswith(tuple(args.namespaces))]
 
     # Generate header
     tmpl_loader = jinja2.FileSystemLoader(searchpath=args.templates)
     tmpl_env = jinja2.Environment(loader=tmpl_loader)
 
+    tmpl_paths = {
+        "hdr": "pp-header.jinja",
+        "src": "pp-source.jinja"
+    }
+
     with open(declr["hdr_path"], "w") as hfd:
-        hfd.write(tmpl_env.get_template("pp-header.jinja").render(declr=declr))
+        hfd.write(tmpl_env.get_template(tmpl_paths["hdr"]).render(
+            declr=declr, structs=fmt["structs"]
+        ))
 
     with open(declr["src_path"], "w") as hfd:
-        hfd.write(tmpl_env.get_template("pp-source.jinja").render(declr=declr))
+        hfd.write(tmpl_env.get_template(tmpl_paths["src"]).render(
+            declr=declr, structs=fmt["structs"]
+        ))
 
     return 0 if declr else 1
 
