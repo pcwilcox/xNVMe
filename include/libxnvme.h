@@ -348,7 +348,8 @@ struct xnvme_cmd_ctx_pool;
  * @struct xnvme_cmd_ctx
  */
 struct xnvme_cmd_ctx {
-	struct xnvme_spec_cpl cpl;		///< NVMe completion
+	struct xnvme_spec_cmd cmd;		///< NVMe Command
+	struct xnvme_spec_cpl cpl;		///< NVMe Completion
 
 	///< Fields for CMD_OPT: XNVME_CMD_ASYNC
 	struct {
