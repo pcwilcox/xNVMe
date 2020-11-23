@@ -352,9 +352,9 @@ struct xnvme_cmd_ctx {
 
 	///< Fields for CMD_OPT: XNVME_CMD_ASYNC
 	struct {
-		struct xnvme_queue *queue;	///< Queue context
-		xnvme_queue_cb cb;		///< User callback function
-		void *cb_arg;			///< User callback arguments
+		struct xnvme_queue *queue;	///< Queue used for command processing
+		xnvme_queue_cb cb;		///< User defined callback function
+		void *cb_arg;			///< User defined callback function arguments
 
 		///< Per command for backend specific data
 		uint8_t be_rsvd[8];
