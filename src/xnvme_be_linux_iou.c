@@ -220,18 +220,17 @@ _linux_iou_wait(struct xnvme_queue *queue)
 }
 
 int
-_linux_iou_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
-		  void *dbuf, size_t dbuf_nbytes, void *mbuf,
-		  size_t mbuf_nbytes, int XNVME_UNUSED(opts),
-		  struct xnvme_cmd_ctx *ctx)
+_linux_iou_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+		  void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
 {
 	struct xnvme_be_linux_state *state = (void *)dev->be.state;
 	struct xnvme_queue_iou *actx = (void *)ctx->async.queue;
 	struct io_uring_sqe *sqe = NULL;
+
 	int opcode;
 	int err = 0;
 
-	switch (cmd->common.opcode) {
+	switch (ctx->cmd.common.opcode) {
 	case XNVME_SPEC_NVM_OPC_WRITE:
 		opcode = IORING_OP_WRITE;
 		break;
@@ -242,7 +241,7 @@ _linux_iou_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
 
 	default:
 		XNVME_DEBUG("FAILED: unsupported opcode: %d for async",
-			    cmd->common.opcode);
+			    ctx->cmd.common.opcode);
 		return -ENOSYS;
 	}
 
@@ -263,7 +262,7 @@ _linux_iou_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
 	sqe->opcode = opcode;
 	sqe->addr = (unsigned long) dbuf;
 	sqe->len = dbuf_nbytes;
-	sqe->off = cmd->nvm.slba << dev->ssw;
+	sqe->off = ctx->cmd.nvm.slba << dev->ssw;
 	sqe->flags = actx->poll_sq ? IOSQE_FIXED_FILE : 0;
 	sqe->ioprio = 0;
 	// NOTE: we only ever register a single file, the raw device, so the
@@ -275,7 +274,7 @@ _linux_iou_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
 
 	err = io_uring_submit(&actx->ring);
 	if (err < 0) {
-		XNVME_DEBUG("io_uring_submit(%d), err: %d", cmd->common.opcode,
+		XNVME_DEBUG("io_uring_submit(%d), err: %d", ctx->cmd.common.opcode,
 			    err);
 		return err;
 	}

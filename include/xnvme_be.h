@@ -31,8 +31,8 @@
 	( XNVME_BE_ASYNC_NBYTES + XNVME_BE_SYNC_NBYTES + XNVME_BE_DEV_NBYTES + XNVME_BE_MEM_NBYTES + XNVME_BE_ATTR_NBYTES + XNVME_BE_STATE_NBYTES )
 
 struct xnvme_be_async {
-	int (*cmd_io)(struct xnvme_dev *, struct xnvme_spec_cmd *, void *,
-		      size_t, void *, size_t, int, struct xnvme_cmd_ctx *);
+	int (*cmd_io)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *, size_t,
+		      int);
 
 	int (*poke)(struct xnvme_queue *, uint32_t);
 
@@ -48,32 +48,29 @@ struct xnvme_be_async {
 
 	uint64_t enabled;
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_async) == XNVME_BE_ASYNC_NBYTES,
-		    "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_async) == XNVME_BE_ASYNC_NBYTES, "Incorrect size")
 
 struct xnvme_be_sync {
 	/**
 	 * Pass a NVMe I/O Command Through to the device with minimal driver
 	 * intervention
 	 */
-	int (*cmd_io)(struct xnvme_dev *, struct xnvme_spec_cmd *, void *,
-		      size_t, void *, size_t, int, struct xnvme_cmd_ctx *);
+	int (*cmd_io)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *, size_t,
+		      int);
 
 	/**
 	 * Pass a NVMe Admin Command Through to the device with minimal driver
 	 * intervention
 	 */
-	int (*cmd_admin)(struct xnvme_dev *, struct xnvme_spec_cmd *,
-			 void *, size_t, void *, size_t, int,
-			 struct xnvme_cmd_ctx *);
+	int (*cmd_admin)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *,
+			 size_t, int);
 
 	int (*supported)(struct xnvme_dev *, uint32_t);
 
 	const char *id;
 	uint64_t enabled;
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_sync) == XNVME_BE_SYNC_NBYTES,
-		    "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_sync) == XNVME_BE_SYNC_NBYTES, "Incorrect size")
 
 struct xnvme_be_dev {
 	/**
@@ -91,8 +88,7 @@ struct xnvme_be_dev {
 	 */
 	void (*dev_close)(struct xnvme_dev *);
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_dev) == XNVME_BE_DEV_NBYTES,
-		    "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_dev) == XNVME_BE_DEV_NBYTES, "Incorrect size")
 
 struct xnvme_be_mem {
 	/**
@@ -116,8 +112,7 @@ struct xnvme_be_mem {
 	 */
 	void (*buf_free)(const struct xnvme_dev *, void *);
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_mem) == XNVME_BE_MEM_NBYTES,
-		    "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_be_mem) == XNVME_BE_MEM_NBYTES, "Incorrect size")
 
 /**
  * Backend function-interface
@@ -134,8 +129,7 @@ struct xnvme_be {
 	struct xnvme_be_mem mem;		///< Memory management
 	uint8_t state[XNVME_BE_STATE_NBYTES];	///< Instance state
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_be) == XNVME_BE_NBYTES,
-		    "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_be) == XNVME_BE_NBYTES, "Incorrect size")
 
 /**
  * Auxilary helpers
@@ -179,8 +173,8 @@ int
 uri_parse_scheme(const char *uri, char *scheme);
 
 int
-xnvme_ident_yaml(FILE *stream, const struct xnvme_ident *ident, int indent,
-		 const char *sep, int head);
+xnvme_ident_yaml(FILE *stream, const struct xnvme_ident *ident, int indent, const char *sep,
+		 int head);
 
 int
 xnvme_enumeration_alloc(struct xnvme_enumeration **list, uint32_t capacity);
@@ -189,8 +183,7 @@ void
 xnvme_enumeration_free(struct xnvme_enumeration *list);
 
 int
-xnvme_enumeration_append(struct xnvme_enumeration *list,
-			 struct xnvme_ident *entry);
+xnvme_enumeration_append(struct xnvme_enumeration *list, struct xnvme_ident *entry);
 
 bool
 has_scheme(const char *needle, const char *haystack[], int len);
@@ -199,7 +192,6 @@ int
 path_to_ll(const char *path, uint64_t *val);
 
 bool
-xnvme_ident_opt_to_val(const struct xnvme_ident *ident, const char *opt,
-		       uint32_t *val);
+xnvme_ident_opt_to_val(const struct xnvme_ident *ident, const char *opt, uint32_t *val);
 
 #endif /* __INTERNAL_XNVME_BE_H */

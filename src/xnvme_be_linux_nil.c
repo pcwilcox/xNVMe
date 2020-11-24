@@ -103,20 +103,19 @@ _linux_nil_wait(struct xnvme_queue *queue)
 }
 
 static inline int
-_linux_nil_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev),
-		  struct xnvme_spec_cmd *XNVME_UNUSED(cmd), void *XNVME_UNUSED(dbuf),
-		  size_t XNVME_UNUSED(dbuf_nbytes), void *XNVME_UNUSED(mbuf),
-		  size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts),
-		  struct xnvme_cmd_ctx *ctx)
+_linux_nil_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx,
+		  void *XNVME_UNUSED(dbuf), size_t XNVME_UNUSED(dbuf_nbytes),
+		  void *XNVME_UNUSED(mbuf), size_t XNVME_UNUSED(mbuf_nbytes),
+		  int XNVME_UNUSED(opts))
 {
-	struct xnvme_queue_nil *actx = (void *)ctx->async.queue;
+	struct xnvme_queue_nil *queue = (void *)ctx->async.queue;
 
-	if (actx->outstanding == actx->depth) {
+	if (queue->outstanding == queue->depth) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}
 
-	actx->ctx[actx->outstanding++] = ctx;
+	queue->ctx[queue->outstanding++] = ctx;
 
 	return 0;
 }

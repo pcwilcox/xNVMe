@@ -67,19 +67,18 @@ _sub_idfy(struct xnvmec *cli, uint8_t cns, uint16_t cntid, uint8_t nsid,
 	  uint16_t nvmsetid, uint8_t uuid)
 {
 	struct xnvme_dev *dev = cli->args.dev;
-	struct xnvme_spec_cmd cmd = { 0 };
 	struct xnvme_spec_idfy *dbuf = NULL;
 	size_t dbuf_nbytes = sizeof(*dbuf);
 	struct xnvme_cmd_ctx ctx = {0 };
 	int err;
 
 	// Setup command
-	cmd.common.opcode = XNVME_SPEC_ADM_OPC_IDFY;
-	cmd.common.nsid = nsid;
-	cmd.idfy.cns = cns;
-	cmd.idfy.cntid = cntid;
-	cmd.idfy.nvmsetid = nvmsetid;
-	cmd.idfy.uuid = uuid;
+	ctx.cmd.common.opcode = XNVME_SPEC_ADM_OPC_IDFY;
+	ctx.cmd.common.nsid = nsid;
+	ctx.cmd.idfy.cns = cns;
+	ctx.cmd.idfy.cntid = cntid;
+	ctx.cmd.idfy.nvmsetid = nvmsetid;
+	ctx.cmd.idfy.uuid = uuid;
 
 	dbuf = xnvme_buf_alloc(dev, dbuf_nbytes, NULL);
 	if (!dbuf) {
@@ -88,8 +87,7 @@ _sub_idfy(struct xnvmec *cli, uint8_t cns, uint16_t cntid, uint8_t nsid,
 		goto exit;
 	}
 
-	err = xnvme_cmd_pass_admin(dev, &cmd, dbuf, dbuf_nbytes, NULL, 0x0, 0x0,
-				   &ctx);
+	err = xnvme_cmd_pass_admin(dev, &ctx, dbuf, dbuf_nbytes, NULL, 0, 0x0);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_cmd_pass_admin()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -463,7 +461,6 @@ static int
 sub_pass(struct xnvmec *cli, int opts, int admin)
 {
 	struct xnvme_dev *dev = cli->args.dev;
-	struct xnvme_spec_cmd cmd = { 0 };
 	struct xnvme_cmd_ctx ctx = {0 };
 	void *data_buf = NULL;
 	size_t data_nbytes = cli->args.data_nbytes;
@@ -473,7 +470,7 @@ sub_pass(struct xnvmec *cli, int opts, int admin)
 
 	xnvmec_pinf("xnvme_cmd_pass(..., CMD_OPTS=0x%x, ...)", opts);
 
-	err = xnvmec_buf_from_file(&cmd, sizeof(cmd), cli->args.cmd_input);
+	err = xnvmec_buf_from_file(&ctx.cmd, sizeof(ctx.cmd), cli->args.cmd_input);
 	if (err) {
 		xnvmec_perr("xnvmec_buf_from_file()", err);
 		xnvmec_pinf("Error reading: '%s'", cli->args.cmd_input);
@@ -511,15 +508,13 @@ sub_pass(struct xnvmec *cli, int opts, int admin)
 	}
 
 	if (cli->args.verbose) {
-		xnvme_spec_cmd_pr(&cmd, XNVME_PR_DEF);
+		xnvme_spec_cmd_pr(&ctx.cmd, XNVME_PR_DEF);
 	}
 
 	if (admin) {
-		err = xnvme_cmd_pass_admin(dev, &cmd, data_buf, data_nbytes,
-					   meta_buf, meta_nbytes, opts, &ctx);
+		err = xnvme_cmd_pass_admin(dev, &ctx, data_buf, data_nbytes, meta_buf, meta_nbytes, opts);
 	} else {
-		err = xnvme_cmd_pass(dev, &cmd, data_buf, data_nbytes, meta_buf,
-				     meta_nbytes, opts, &ctx);
+		err = xnvme_cmd_pass(dev, &ctx, data_buf, data_nbytes, meta_buf, meta_nbytes, opts);
 	}
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_cmd_pass[_admin]()", err);

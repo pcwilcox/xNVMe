@@ -30,7 +30,7 @@ cb_lbacheck(struct xnvme_cmd_ctx *ctx, void *cb_arg)
 	}
 
 	if (ctx->cpl.result != expected) {
-		xnvmec_pinf("ERR: cmd_ctx->cpl.result: 0x%016lx != 0x%016lx",
+		xnvmec_pinf("ERR: ctx->cpl.result: 0x%016lx != 0x%016lx",
 			    ctx->cpl.result, expected);
 		cb_args->ecount_offset += 1;
 	}

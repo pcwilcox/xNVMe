@@ -282,60 +282,51 @@ enum xnvme_cmd_opts {
  *
  * When constructing the command then take note of the following:
  *
- * - The CID is managed at a lower level and probably over-written if assigned
- * - When 'opts' include XNVME_CMD_PRP then just pass buffers allocated with `xnvme_buf_alloc`, the
- *   construction of PRP-lists, assignment to command and assignment of pdst is managed at lower
- *   levels
- * - When 'opts' include XNVME_CMD_SGL then both data, and meta, when given must be setup via the
- *   `xnvme_sgl` helper functions, pdst, data, and meta fields must be also be set by you
+ * @note User-defined payloads -- When 'opts' include XNVME_CMD_UPLD_SGLD or XNVME_CMD_UPLD_SGLM
+ * then the respective buffer points to a user-defined payload setup with the `xnvme_sgl` helper
+ * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
+ * helper functions, pdst, data, and meta fields must be also be set by you
  *
  * @param dev Device handle obtained with xnvme_dev_open() / xnvme_dev_openf()
- * @param cmd Pointer to the NVMe command to submit
+ * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload
  * @param dbuf_nbytes size of data-payload in bytes
  * @param mbuf pointer to meta-payload
  * @param mbuf_nbytes size of the meta-payload in bytes
  * @param opts Command options; see
- * @param cmd_ctx Pointer to structure for async. context and NVMe completion
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd, void *dbuf, size_t dbuf_nbytes,
-	       void *mbuf, size_t mbuf_nbytes, int opts, struct xnvme_cmd_ctx *cmd_ctx);
+xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+	       void *mbuf, size_t mbuf_nbytes, int opts);
 
 /**
  * Pass a NVMe Admin Command through to the device with minimal intervention
  *
- * When constructing the command then take note of the following:
- *
- * - The CID is managed at a lower level and probably over-written if assigned
- * - When 'opts' include XNVME_CMD_PRP then just pass buffers allocated with `xnvme_buf_alloc`, the
- *   construction of PRP-lists, assignment to command and assignment of pdst is managed at lower
- *   levels
- * - When 'opts' include XNVME_CMD_SGL then both data, and meta, when given must be setup via the
- *   `xnvme_sgl` helper functions, pdst, data, and meta fields must be also be set by you
+ * @note User-defined payloads -- When 'opts' include XNVME_CMD_UPLD_SGLD or XNVME_CMD_UPLD_SGLM
+ * then the respective buffer points to a user-defined payload setup with the `xnvme_sgl` helper
+ * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
+ * helper functions, pdst, data, and meta fields must be also be set by you
  *
  * @param dev Device handle obtained with xnvme_dev_open() / xnvme_dev_openf()
- * @param cmd Pointer to the NVMe command to submit
+ * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload
  * @param dbuf_nbytes size of data-payload in bytes
  * @param mbuf pointer to meta-payload
  * @param mbuf_nbytes size of the meta-payload in bytes
  * @param opts Command options; see
- * @param cmd_ctx Pointer to structure for async. context and NVMe completion
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd, void *dbuf,
-		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts,
-		     struct xnvme_cmd_ctx *cmd_ctx);
+xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
+		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
 
 /**
  * Signature of function used with Command Queues for async. callback upon command-completion
  */
-typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *cmd_ctx, void *opaque);
+typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
 
 /**
  * Forward declaration, see definition further down
@@ -369,23 +360,23 @@ struct xnvme_cmd_ctx {
 /**
  * Clears/resets the given ::xnvme_cmd_ctx
  *
- * @param cmd_ctx Pointer to the ::xnvme_cmd_ctx to clear
+ * @param ctx Pointer to the ::xnvme_cmd_ctx to clear
  */
 void
-xnvme_cmd_ctx_clear(struct xnvme_cmd_ctx *cmd_ctx);
+xnvme_cmd_ctx_clear(struct xnvme_cmd_ctx *ctx);
 
 /**
  * Encapsulate completion-error checking here for now.
  *
  * @todo re-think this
- * @param cmd_ctx Pointer to the ::xnvme_cmd_ctx to check status on
+ * @param ctx Pointer to the ::xnvme_cmd_ctx to check status on
  *
  * @return On success, 0 is return. On error, a non-zero value is returned.
  */
 static inline int
-xnvme_cmd_ctx_cpl_status(struct xnvme_cmd_ctx *cmd_ctx)
+xnvme_cmd_ctx_cpl_status(struct xnvme_cmd_ctx *ctx)
 {
-	return cmd_ctx->cpl.status.sc || cmd_ctx->cpl.status.sct;
+	return ctx->cpl.status.sc || ctx->cpl.status.sct;
 }
 
 /**
@@ -404,8 +395,7 @@ xnvme_cmd_ctx_pool_alloc(struct xnvme_cmd_ctx_pool **pool, uint32_t capacity);
 
 int
 xnvme_cmd_ctx_pool_init(struct xnvme_cmd_ctx_pool *pool, struct xnvme_queue *queue,
-			xnvme_queue_cb cb,
-			void *cb_args);
+			xnvme_queue_cb cb, void *cb_args);
 
 void
 xnvme_cmd_ctx_pool_free(struct xnvme_cmd_ctx_pool *pool);

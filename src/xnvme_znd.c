@@ -390,17 +390,15 @@ int
 xnvme_znd_mgmt_send(struct xnvme_dev *dev, uint32_t nsid, uint64_t zslba,
 		    enum xnvme_spec_znd_cmd_mgmt_send_action action,
 		    enum xnvme_spec_znd_mgmt_send_action_sf sf, void *dbuf, int opts,
-		    struct xnvme_cmd_ctx *ret)
+		    struct xnvme_cmd_ctx *ctx)
 {
-	struct xnvme_spec_cmd cmd = { 0 };
-
 	uint32_t dbuf_nbytes = 0;
 
-	cmd.common.opcode = XNVME_SPEC_ZND_OPC_MGMT_SEND;
-	cmd.common.nsid = nsid;
-	cmd.znd.mgmt_send.slba = zslba;
-	cmd.znd.mgmt_send.zsa = action;
-	cmd.znd.mgmt_send.zsasf = sf;
+	ctx->cmd.common.opcode = XNVME_SPEC_ZND_OPC_MGMT_SEND;
+	ctx->cmd.common.nsid = nsid;
+	ctx->cmd.znd.mgmt_send.slba = zslba;
+	ctx->cmd.znd.mgmt_send.zsa = action;
+	ctx->cmd.znd.mgmt_send.zsasf = sf;
 
 	if (dbuf) {
 		struct xnvme_spec_idfy_ns *nvm = (void *)xnvme_dev_get_ns(dev);
@@ -409,48 +407,45 @@ xnvme_znd_mgmt_send(struct xnvme_dev *dev, uint32_t nsid, uint64_t zslba,
 		dbuf_nbytes = zns->lbafe[nvm->flbas.format].zdes * 64;
 	}
 
-	return xnvme_cmd_pass(dev, &cmd, dbuf, dbuf_nbytes, NULL, 0, opts, ret);
+	return xnvme_cmd_pass(dev, ctx, dbuf, dbuf_nbytes, NULL, 0, opts);
 }
 
 int
 xnvme_znd_mgmt_recv(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba,
 		    enum xnvme_spec_znd_cmd_mgmt_recv_action action,
 		    enum xnvme_spec_znd_cmd_mgmt_recv_action_sf sf, uint8_t partial,
-		    void *dbuf, uint32_t dbuf_nbytes, int opts, struct xnvme_cmd_ctx *ret)
+		    void *dbuf, uint32_t dbuf_nbytes, int opts, struct xnvme_cmd_ctx *ctx)
 {
-	struct xnvme_spec_cmd cmd = {0 };
+	ctx->cmd.common.opcode = XNVME_SPEC_ZND_OPC_MGMT_RECV;
+	ctx->cmd.common.nsid = nsid;
+	ctx->cmd.znd.mgmt_recv.slba = slba;
+	ctx->cmd.znd.mgmt_recv.ndwords = (dbuf_nbytes >> 2) - 1;
+	ctx->cmd.znd.mgmt_recv.zra = action;
+	ctx->cmd.znd.mgmt_recv.zrasf = sf;
+	ctx->cmd.znd.mgmt_recv.partial = partial;
 
-	cmd.common.opcode = XNVME_SPEC_ZND_OPC_MGMT_RECV;
-	cmd.common.nsid = nsid;
-	cmd.znd.mgmt_recv.slba = slba;
-	cmd.znd.mgmt_recv.ndwords = (dbuf_nbytes >> 2) - 1;
-	cmd.znd.mgmt_recv.zra = action;
-	cmd.znd.mgmt_recv.zrasf = sf;
-	cmd.znd.mgmt_recv.partial = partial;
-
-	return xnvme_cmd_pass(dev, &cmd, dbuf, dbuf_nbytes, NULL, 0, opts, ret);
+	return xnvme_cmd_pass(dev, ctx, dbuf, dbuf_nbytes, NULL, 0, opts);
 }
 
 int
 xnvme_znd_append(struct xnvme_dev *dev, uint32_t nsid, uint64_t zslba, uint16_t nlb,
-		 const void *dbuf, const void *mbuf, int opts, struct xnvme_cmd_ctx *ret)
+		 const void *dbuf, const void *mbuf, int opts, struct xnvme_cmd_ctx *ctx)
 {
 	void *cdbuf = (void *)dbuf;
 	void *cmbuf = (void *)mbuf;
 
 	size_t dbuf_nbytes = cdbuf ? dev->geo.lba_nbytes * (nlb + 1) : 0;
 	size_t mbuf_nbytes = cmbuf ? dev->geo.nbytes_oob * (nlb + 1) : 0;
-	struct xnvme_spec_cmd cmd = {0 };
 
 	// TODO: consider returning -EINVAL when mbuf is provided and namespace
 	// have extended-lba in effect
 
-	cmd.common.opcode = XNVME_SPEC_ZND_OPC_APPEND;
-	cmd.common.nsid = nsid;
-	cmd.znd.append.zslba = zslba;
-	cmd.znd.append.nlb = nlb;
+	ctx->cmd.common.opcode = XNVME_SPEC_ZND_OPC_APPEND;
+	ctx->cmd.common.nsid = nsid;
+	ctx->cmd.znd.append.zslba = zslba;
+	ctx->cmd.znd.append.nlb = nlb;
 
-	return xnvme_cmd_pass(dev, &cmd, cdbuf, dbuf_nbytes, cmbuf, mbuf_nbytes, opts, ret);
+	return xnvme_cmd_pass(dev, ctx, cdbuf, dbuf_nbytes, cmbuf, mbuf_nbytes, opts);
 }
 
 int

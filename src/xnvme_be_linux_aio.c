@@ -95,7 +95,7 @@ _linux_aio_poke(struct xnvme_queue *queue, uint32_t max)
 				return -EIO;
 			}
 
-			// Map event-result to cmd_ctx-completion
+			// Map event-result to ctx-completion
 			ctx->cpl.status.sc = ev->res;
 			ctx->async.cb(ctx, ctx->async.cb_arg);
 
@@ -144,24 +144,22 @@ _ring_inc(struct xnvme_queue_aio *actx, unsigned int *val, unsigned int add)
 }
 
 int
-_linux_aio_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
-		  void *dbuf, size_t dbuf_nbytes, void *mbuf,
-		  size_t mbuf_nbytes, int XNVME_UNUSED(opts),
-		  struct xnvme_cmd_ctx *ctx)
+_linux_aio_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+		  void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
 {
 	struct xnvme_be_linux_state *state = (void *)dev->be.state;
-	struct xnvme_queue_aio *qctx  = (void *)ctx->async.queue;
-	struct iocb *iocb = &qctx->iocb;
+	struct xnvme_queue_aio *queue  = (void *)ctx->async.queue;
+	struct iocb *iocb = &queue->iocb;
 	struct iocb **iocbs;
 	int ret = 0;
 
-	switch (cmd->common.opcode) {
+	switch (ctx->cmd.common.opcode) {
 	case XNVME_SPEC_NVM_OPC_WRITE:
-		io_prep_pwrite(iocb, state->fd, dbuf, dbuf_nbytes, cmd->nvm.slba << dev->ssw);
+		io_prep_pwrite(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << dev->ssw);
 		break;
 
 	case XNVME_SPEC_NVM_OPC_READ:
-		io_prep_pread(iocb, state->fd, dbuf, dbuf_nbytes, cmd->nvm.slba << dev->ssw);
+		io_prep_pread(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << dev->ssw);
 		break;
 
 	default:
@@ -169,7 +167,7 @@ _linux_aio_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
 	}
 
 	if (ctx->async.queue->base.outstanding < ctx->async.queue->base.depth) {
-		qctx->queued++;
+		queue->queued++;
 	}
 
 	if (ctx->async.queue->base.outstanding == ctx->async.queue->base.depth) {
@@ -182,42 +180,42 @@ _linux_aio_cmd_io(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd,
 	}
 
 	iocb->data = (unsigned long *)ctx;
-	qctx->iocbs[qctx->head] = &qctx->iocb;
+	queue->iocbs[queue->head] = &queue->iocb;
 
-	_ring_inc(qctx, &qctx->head, 1);
+	_ring_inc(queue, &queue->head, 1);
 
 	ctx->async.queue->base.outstanding += 1;
 
 	do {
-		long nr = qctx->queued;
-		nr = XNVME_MIN((unsigned int) nr, qctx->entries - qctx->tail);
+		long nr = queue->queued;
+		nr = XNVME_MIN((unsigned int) nr, queue->entries - queue->tail);
 
-		iocbs = qctx->iocbs + qctx->tail;
+		iocbs = queue->iocbs + queue->tail;
 
-		ret = io_submit(qctx->aio_ctx, nr, iocbs);
+		ret = io_submit(queue->aio_ctx, nr, iocbs);
 
 		if (ret > 0) {
-			qctx->queued -= ret;
-			_ring_inc(qctx, &qctx->tail, ret);
+			queue->queued -= ret;
+			_ring_inc(queue, &queue->tail, ret);
 			ret = 0;
 		} else if (ret == -EINTR || !ret) {
 			continue;
 		} else if (ret == -EAGAIN) {
-			if (qctx->queued) {
+			if (queue->queued) {
 				ret = 0;
 				break;
 			}
 			continue;
 		} else if (ret == -ENOMEM) {
 
-			if (qctx->queued) {
+			if (queue->queued) {
 				ret = 0;
 			}
 			break;
 		} else {
 			break;
 		}
-	} while (qctx->queued);
+	} while (queue->queued);
 
 	return 0;
 }

@@ -4,13 +4,12 @@
 #define __INTERNAL_XNVME_BE_LINUX_THR_H
 
 struct _entry {
-	struct xnvme_spec_cmd cmd;
 	struct xnvme_dev *dev;
+	struct xnvme_cmd_ctx *ctx;
 	void *dbuf;
 	size_t dbuf_nbytes;
 	void *mbuf;
 	size_t mbuf_nbytes;
-	struct xnvme_cmd_ctx *ctx;
 	STAILQ_ENTRY(_entry) link;
 };
 

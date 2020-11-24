@@ -53,7 +53,7 @@ test_open_zdptr(struct xnvmec *cli)
 		goto exit;
 	}
 
-	xnvmec_pinf("Scan for empty and sequential write cmd_ctx. zone");
+	xnvmec_pinf("Scan for empty and sequential write ctx. zone");
 
 	for (uint64_t idx = 0; idx < before->nentries; ++idx) {
 		struct xnvme_spec_znd_descr *descr = XNVME_ZND_REPORT_DESCR(before, idx);
