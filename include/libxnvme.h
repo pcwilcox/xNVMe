@@ -343,18 +343,18 @@ struct xnvme_cmd_ctx {
 	struct xnvme_spec_cpl cpl;		///< Completion result from processing
 
 	union {
+		///< Fields for command option: XNVME_CMD_SYNC
+		struct {
+			struct xnvme_dev *dev;
+			uint8_t _rsvd[16];
+		};
+
 		///< Fields for command option: XNVME_CMD_ASYNC
 		struct {
 			struct xnvme_queue *queue;    ///< Queue used for command processing
 			xnvme_queue_cb cb;        ///< User defined callback function
 			void *cb_arg;            ///< User defined callback function arguments
 		} async;
-
-		///< Fields for command option: XNVME_CMD_SYNC
-		struct  {
-			struct xnvme_dev *dev;
-			uint8_t _rsvd[16];
-		} sync;
 	};
 
 	///< Per command data reserved for internal library usage
