@@ -37,37 +37,76 @@ ioctl_request_to_str(unsigned long req)
 }
 #endif
 
+struct _kernel_cpl {
+	union {
+		struct {
+			uint32_t timeout_ms;
+			uint32_t result;
+			uint64_t rsvd;
+		} res32;
+
+		struct {
+			uint32_t timeout_ms;
+			uint32_t rsvd1;
+			uint64_t result;
+		} res64;
+	};
+};
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_spec_cpl) == sizeof(struct _kernel_cpl), "Incorrect size")
+
 static inline int
 ioctl_wrap(struct xnvme_dev *dev, unsigned long ioctl_req, struct xnvme_cmd_ctx *ctx)
 {
 	struct xnvme_be_linux_state *state = (void *)dev->be.state;
+	struct _kernel_cpl *kcpl = (void *)&ctx->cpl;
 	int err;
-	
+
 	err = ioctl(state->fd, ioctl_req, ctx);
-	if (!err) {	// No errors
+
+	// Assign the completion-result
+	switch (ioctl_req) {
+	case NVME_IOCTL_ADMIN_CMD:
+	case NVME_IOCTL_IO_CMD:
+		ctx->cpl.result = kcpl->res32.result;
+		break;
+#ifdef NVME_IOCTL_IO64
+	case NVME_IOCTL_IO64_CMD:
+		ctx->cpl.result = kcpl->res64.result;
+		break;
+#endif
+#ifdef NVME_IOCTL_ADMIN64
+	case NVME_IOCTL_ADMIN64_CMD:
+		ctx->cpl.result = kcpl->res64.result;
+		break;
+#endif
+	default:
+		return -1;
+	}
+
+	// Zero-out the remainder of the completion
+	ctx->cpl.status.val = 0;
+	ctx->cpl.sqhd = 0;
+	ctx->cpl.sqid = 0;
+	ctx->cpl.cid = 0;
+
+	if (!err) {
 		return 0;
 	}
 
+	// Transform ioctl-errors to completion status-codes
 	XNVME_DEBUG("FAILED: ioctl(%s), err(%d), errno(%d)", ioctl_request_to_str(ioctl_req),
 		    err, errno);
 
-	// Transform ioctl EINVAL to Invalid field in command
+	// Transform ioctl EINVAL to Invalid Field in Command
 	if (err == -1 && errno == EINVAL) {
-		XNVME_DEBUG("INFO: ioctl-errno(EINVAL) => INV_FIELD_IN_CMD");
-		XNVME_DEBUG("INFO: overwrr. err(%d) with '0x2'", err);
-		err = 0x2;
-	}
-	if (err > 0 && !ctx->cpl.status.val) {
-		XNVME_DEBUG("INFO: overwr. cpl.status.val(0x%x) with '%d'",
-			    ctx->cpl.status.val, err);
-		ctx->cpl.status.val = err;
+		ctx->cpl.status.val = 0x2;
 	}
 	if (!errno) {
 		XNVME_DEBUG("INFO: !errno, setting errno=EIO");
 		errno = EIO;
 	}
 
-	return err;
+	return -errno;
 }
 
 int
