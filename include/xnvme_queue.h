@@ -5,10 +5,11 @@
 #define __INTERNAL_XNVME_QUEUE_H
 
 struct xnvme_queue_base {
+	struct xnvme_dev *dev;  ///< Device on which the queue operates
 	uint32_t depth;		///< IO depth
 	uint32_t outstanding;	///< Outstanding IO on the context/ring/queue
-	struct xnvme_dev *dev;  ///< Device on which the queue operates
 };
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_base) == 16, "Incorrect size")
 
 struct xnvme_queue {
 	struct xnvme_queue_base base;
