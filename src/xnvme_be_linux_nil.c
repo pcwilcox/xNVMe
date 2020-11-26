@@ -41,19 +41,19 @@ _linux_nil_term(struct xnvme_queue *XNVME_UNUSED(queue))
 }
 
 int
-_linux_nil_poke(struct xnvme_queue *queue, uint32_t max)
+_linux_nil_poke(struct xnvme_queue *q, uint32_t max)
 {
-	struct xnvme_queue_nil *actx = (void *)queue;
+	struct xnvme_queue_nil *queue = (void *)q;
 	unsigned completed = 0;
 
-	max = max ? max : actx->outstanding;
-	max = max > actx->outstanding ? actx->outstanding : max;
+	max = max ? max : queue->base.outstanding;
+	max = max > queue->base.outstanding ? queue->base.outstanding : max;
 
 	while (completed < max) {
-		unsigned cur = actx->outstanding - completed - 1;
+		unsigned cur = queue->base.outstanding - completed - 1;
 		struct xnvme_cmd_ctx *ctx;
 
-		ctx = actx->ctx[cur];
+		ctx = queue->ctx[cur];
 		if (!ctx) {
 			XNVME_DEBUG("-{[THIS SHOULD NOT HAPPEN]}-");
 
@@ -64,12 +64,12 @@ _linux_nil_poke(struct xnvme_queue *queue, uint32_t max)
 
 		ctx->cpl.status.sc = 0;
 		ctx->async.cb(ctx, ctx->async.cb_arg);
-		actx->ctx[cur] = NULL;
+		queue->ctx[cur] = NULL;
 
 		++completed;
 	};
 
-	actx->outstanding -= completed;
+	queue->base.outstanding -= completed;
 	return completed;
 }
 
@@ -110,12 +110,12 @@ _linux_nil_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx
 {
 	struct xnvme_queue_nil *queue = (void *)ctx->async.queue;
 
-	if (queue->outstanding == queue->depth) {
+	if (queue->base.outstanding == queue->base.depth) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}
 
-	queue->ctx[queue->outstanding++] = ctx;
+	queue->ctx[queue->base.outstanding++] = ctx;
 
 	return 0;
 }
