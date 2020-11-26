@@ -54,14 +54,10 @@ struct _kernel_cpl {
 };
 XNVME_STATIC_ASSERT(sizeof(struct xnvme_spec_cpl) == sizeof(struct _kernel_cpl), "Incorrect size")
 
-static inline int
-ioctl_wrap(struct xnvme_dev *dev, unsigned long ioctl_req, struct xnvme_cmd_ctx *ctx)
+int
+xnvme_be_linux_nvme_map_cpl(struct xnvme_cmd_ctx *ctx, unsigned long ioctl_req)
 {
-	struct xnvme_be_linux_state *state = (void *)dev->be.state;
 	struct _kernel_cpl *kcpl = (void *)&ctx->cpl;
-	int err;
-
-	err = ioctl(state->fd, ioctl_req, ctx);
 
 	// Assign the completion-result
 	switch (ioctl_req) {
@@ -88,6 +84,20 @@ ioctl_wrap(struct xnvme_dev *dev, unsigned long ioctl_req, struct xnvme_cmd_ctx 
 	ctx->cpl.sqhd = 0;
 	ctx->cpl.sqid = 0;
 	ctx->cpl.cid = 0;
+
+	return 0;
+}
+
+static inline int
+ioctl_wrap(struct xnvme_dev *dev, unsigned long ioctl_req, struct xnvme_cmd_ctx *ctx)
+{
+	struct xnvme_be_linux_state *state = (void *)dev->be.state;
+	int err;
+
+	err = ioctl(state->fd, ioctl_req, ctx);
+	if (xnvme_be_linux_nvme_map_cpl(ctx, ioctl_req)) {
+		return -ENOSYS;
+	}
 
 	if (!err) {
 		return 0;
