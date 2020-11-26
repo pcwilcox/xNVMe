@@ -29,34 +29,34 @@
 #include <xnvme_dev.h>
 
 int
-_linux_aio_term(struct xnvme_queue *queue)
+_linux_aio_term(struct xnvme_queue *q)
 {
-	struct xnvme_queue_aio *actx = (void *)queue;
+	struct xnvme_queue_aio *queue = (void *)q;
 
 	if (!queue) {
 		XNVME_DEBUG("FAILED: queue: %p", (void *)queue);
 		return -EINVAL;
 	}
 
-	io_destroy(actx->aio_ctx);
-	free(actx->aio_events);
-	free(actx->iocbs);
+	io_destroy(queue->aio_ctx);
+	free(queue->aio_events);
+	free(queue->iocbs);
 
 	return 0;
 }
 
 int
-_linux_aio_init(struct xnvme_queue *queue, int XNVME_UNUSED(opts))
+_linux_aio_init(struct xnvme_queue *q, int XNVME_UNUSED(opts))
 {
-	struct xnvme_queue_aio *actx = (void *)queue;
+	struct xnvme_queue_aio *queue = (void *)q;
 	int err = 0;
 
-	actx->aio_ctx = 0;
-	actx->entries = queue->base.depth;
-	actx->aio_events = calloc(actx->entries, sizeof(struct io_event));
-	actx->iocbs = calloc(actx->entries, sizeof(struct iocb *));
+	queue->aio_ctx = 0;
+	queue->entries = queue->base.depth;
+	queue->aio_events = calloc(queue->entries, sizeof(struct io_event));
+	queue->iocbs = calloc(queue->entries, sizeof(struct iocb *));
 
-	err = io_queue_init(actx->entries, &actx->aio_ctx);
+	err = io_queue_init(queue->entries, &queue->aio_ctx);
 	if (err) {
 		XNVME_DEBUG("FAILED: io_queue_init(), err: %d", err);
 		return err;
@@ -66,9 +66,9 @@ _linux_aio_init(struct xnvme_queue *queue, int XNVME_UNUSED(opts))
 }
 
 int
-_linux_aio_poke(struct xnvme_queue *queue, uint32_t max)
+_linux_aio_poke(struct xnvme_queue *q, uint32_t max)
 {
-	struct xnvme_queue_aio *actx = (void *)queue;
+	struct xnvme_queue_aio *queue = (void *)q;
 	unsigned completed = 0;
 	int ret = 0, event = 0;
 
@@ -79,10 +79,10 @@ _linux_aio_poke(struct xnvme_queue *queue, uint32_t max)
 		struct io_event *ev;
 		struct xnvme_cmd_ctx *ctx;
 
-		ret = io_getevents(actx->aio_ctx, 1, max, actx->aio_events, NULL);
+		ret = io_getevents(queue->aio_ctx, 1, max, queue->aio_events, NULL);
 
 		for (event = 0; event < ret; event++) {
-			ev =  actx->aio_events + event;
+			ev =  queue->aio_events + event;
 			ctx = (struct xnvme_cmd_ctx *)(uintptr_t)ev->data;
 
 			if (!ctx) {
@@ -138,39 +138,40 @@ _linux_aio_wait(struct xnvme_queue *queue)
 }
 
 static inline void
-_ring_inc(struct xnvme_queue_aio *actx, unsigned int *val, unsigned int add)
+_ring_inc(struct xnvme_queue_aio *queue, unsigned int *val, unsigned int add)
 {
-	*val = (*val + add) & (actx->entries - 1);
+	*val = (*val + add) & (queue->entries - 1);
 }
 
 int
-_linux_aio_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
-		  void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
+_linux_aio_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
+		  size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
 {
-	struct xnvme_be_linux_state *state = (void *)dev->be.state;
 	struct xnvme_queue_aio *queue  = (void *)ctx->async.queue;
+	struct xnvme_be_linux_state *state = (void *)queue->base.dev->be.state;
+	const uint64_t ssw = queue->base.dev->ssw;
 	struct iocb *iocb = &queue->iocb;
 	struct iocb **iocbs;
 	int ret = 0;
 
 	switch (ctx->cmd.common.opcode) {
 	case XNVME_SPEC_NVM_OPC_WRITE:
-		io_prep_pwrite(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << dev->ssw);
+		io_prep_pwrite(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << ssw);
 		break;
 
 	case XNVME_SPEC_NVM_OPC_READ:
-		io_prep_pread(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << dev->ssw);
+		io_prep_pread(iocb, state->fd, dbuf, dbuf_nbytes, ctx->cmd.nvm.slba << ssw);
 		break;
 
 	default:
 		return -ENOSYS;
 	}
 
-	if (ctx->async.queue->base.outstanding < ctx->async.queue->base.depth) {
+	if (queue->base.outstanding < queue->base.depth) {
 		queue->queued++;
 	}
 
-	if (ctx->async.queue->base.outstanding == ctx->async.queue->base.depth) {
+	if (queue->base.outstanding == queue->base.depth) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}
