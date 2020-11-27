@@ -1174,27 +1174,27 @@ cmd_async_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 // TODO: consider whether 'mbuf_nbytes' is needed here
 // TODO: consider whether 'opts' is needed here
 int
-xnvme_be_spdk_async_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			   size_t dbuf_nbytes, void *mbuf, size_t XNVME_UNUSED(mbuf_nbytes),
-			   int XNVME_UNUSED(opts))
+xnvme_be_spdk_async_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx,
+			   void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			   size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts))
 {
-	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
 	struct xnvme_queue_spdk *queue = (void *)ctx->async.queue;
+	struct xnvme_be_spdk_state *state = (void *)queue->base.dev->be.state;
 	int err;
 
 	// TODO: do something with mbuf?
 
 	// Early exit when queue is full
-	if (ctx->async.queue->base.outstanding == ctx->async.queue->base.depth) {
+	if (queue->base.outstanding == queue->base.depth) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}
 
-	ctx->async.queue->base.outstanding += 1;
+	queue->base.outstanding += 1;
 	err = submit_ioc(state->ctrlr, queue->qpair, ctx, dbuf, dbuf_nbytes, mbuf, cmd_async_cb,
 			 ctx);
 	if (err) {
-		ctx->async.queue->base.outstanding -= 1;
+		queue->base.outstanding -= 1;
 		XNVME_DEBUG("FAILED: submission failed");
 		return err;
 	}
