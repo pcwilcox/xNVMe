@@ -31,6 +31,7 @@ xnvme_queue_term(struct xnvme_queue *queue)
 int
 xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_queue **queue)
 {
+	size_t queue_nbytes;
 	int err;
 
 	if (!dev) {
@@ -42,7 +43,9 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 		return -EINVAL;
 	}
 
-	*queue = calloc(1, sizeof(**queue));
+	queue_nbytes = sizeof(**queue) + depth * sizeof(*((*queue)->pool));
+
+	*queue = calloc(1, queue_nbytes);
 	if (!*queue) {
 		XNVME_DEBUG("FAILED: calloc(queue), err: %s", strerror(errno));
 		return -errno;

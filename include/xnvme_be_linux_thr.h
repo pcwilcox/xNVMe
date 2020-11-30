@@ -26,7 +26,7 @@ struct xnvme_queue_thr {
 
 	struct _qp *qp;
 
-	uint8_t _rsvd[168];
+	uint8_t _rsvd[224];
 };
 XNVME_STATIC_ASSERT(
 	sizeof(struct xnvme_queue_thr) == XNVME_BE_QUEUE_STATE_NBYTES,

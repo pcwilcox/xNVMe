@@ -8,14 +8,17 @@ struct xnvme_queue_base {
 	struct xnvme_dev *dev;  ///< Device on which the queue operates
 	uint32_t depth;		///< IO depth
 	uint32_t outstanding;	///< Outstanding IO on the context/ring/queue
+	SLIST_HEAD(,xnvme_cmd_ctx) pool;
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_base) == 16, "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_base) == 24, "Incorrect size")
 
 struct xnvme_queue {
 	struct xnvme_queue_base base;
 
-	uint8_t be_rsvd[176];	///< Auxilary backend data
+	uint8_t be_rsvd[232];	///< Auxilary backend data
+
+	struct xnvme_cmd_ctx pool[];
 };
-XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue) == 192, "Incorrect size")
+XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue) == XNVME_BE_QUEUE_STATE_NBYTES, "Incorrect size")
 
 #endif /* __INTERNAL_XNVME_QUEUE_H */
