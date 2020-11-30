@@ -343,11 +343,18 @@ struct xnvme_cmd_ctx {
 	struct xnvme_spec_cpl cpl;		///< Completion result from processing
 
 	///< Fields for command option: XNVME_CMD_ASYNC
-	struct {
-		struct xnvme_queue *queue;    ///< Queue used for command processing
-		xnvme_queue_cb cb;        ///< User defined callback function
-		void *cb_arg;            ///< User defined callback function arguments
-	} async;
+	union {
+		struct {
+			struct xnvme_queue *queue;    ///< Queue used for command processing
+			xnvme_queue_cb cb;        ///< User defined callback function
+			void *cb_arg;            ///< User defined callback function arguments
+		} async;
+
+		struct {
+			struct xnvme_dev *dev;
+			uint8_t _rsvd[16];
+		};
+	};
 
 	///< Per command data reserved for internal library usage
 	uint8_t be_rsvd[8];
@@ -356,6 +363,19 @@ struct xnvme_cmd_ctx {
 	struct xnvme_cmd_ctx_pool *pool;
 	SLIST_ENTRY(xnvme_cmd_ctx) link;
 };
+
+/**
+ * Retrieve a command-context for issuing commands to the given device
+ *
+ */
+struct xnvme_cmd_ctx
+xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev);
+
+/**
+ * Retrieve a command-text for issuing commands to the given queue
+ */
+struct xnvme_cmd_ctx *
+xnvme_cmd_ctx_from_queue(struct xnvme_queue *queue);
 
 /**
  * Clears/resets the given ::xnvme_cmd_ctx
