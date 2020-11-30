@@ -73,10 +73,8 @@ xnvme_cmd_ctx_pool_alloc(struct xnvme_cmd_ctx_pool **pool, uint32_t capacity)
 }
 
 int
-xnvme_cmd_ctx_pool_init(struct xnvme_cmd_ctx_pool *pool,
-			struct xnvme_queue *queue,
-			xnvme_queue_cb cb,
-			void *cb_args)
+xnvme_cmd_ctx_pool_init(struct xnvme_cmd_ctx_pool *pool, struct xnvme_queue *queue,
+			xnvme_queue_cb cb, void *cb_args)
 {
 	for (uint32_t i = 0; i < pool->capacity; ++i) {
 		pool->elm[i].pool = pool;
@@ -125,7 +123,8 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 		return dev->be.async.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
 
 	case XNVME_CMD_SYNC:
-		return dev->be.sync.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
+		return ctx->dev->be.sync.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes,
+						   opts);
 
 	default:
 		XNVME_DEBUG("FAILED: command-mode not provided");
@@ -141,6 +140,7 @@ xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbu
 		XNVME_DEBUG("FAILED: Admin commands are always sync.");
 		return -EINVAL;
 	}
+
 	if ((opts & XNVME_CMD_MASK_UPLD) && dbuf) {
 		xnvme_sgl_setup(dev, &ctx->cmd, dbuf, mbuf, opts);
 	}
