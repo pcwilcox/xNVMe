@@ -17,7 +17,7 @@ struct xnvme_queue {
 
 	uint8_t be_rsvd[232];	///< Auxilary backend data
 
-	struct xnvme_cmd_ctx pool[];
+	struct xnvme_cmd_ctx pool_storage[];
 };
 XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue) == XNVME_BE_QUEUE_STATE_NBYTES, "Incorrect size")
 
