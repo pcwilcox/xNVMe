@@ -147,3 +147,17 @@ xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbu
 
 	return dev->be.sync.cmd_admin(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
 }
+
+struct xnvme_cmd_ctx
+xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev)
+{
+	struct xnvme_cmd_ctx ctx = { .dev = dev };
+
+	return ctx;
+}
+
+struct xnvme_cmd_ctx *
+xnvme_cmd_ctx_from_queue(struct xnvme_queue *XNVME_UNUSED(queue))
+{
+	return NULL;
+}
