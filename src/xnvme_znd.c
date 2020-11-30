@@ -331,7 +331,6 @@ xnvme_znd_stat(struct xnvme_dev *dev, enum xnvme_spec_znd_cmd_mgmt_recv_action_s
 	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_spec_znd_report_hdr *hdr;
 	const size_t hdr_nbytes = sizeof(*hdr);
-	;
 	int err;
 
 	hdr = xnvme_buf_alloc(dev, hdr_nbytes, NULL);
@@ -357,11 +356,12 @@ exit:
 	return err;
 }
 
-struct xnvme_spec_znd_log_changes *xnvme_znd_log_changes_from_dev(struct xnvme_dev *dev)
+struct xnvme_spec_znd_log_changes *
+xnvme_znd_log_changes_from_dev(struct xnvme_dev *dev)
 {
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_spec_znd_log_changes *log = NULL;
 	const size_t log_nbytes = sizeof(*log);
-	struct xnvme_cmd_ctx ctx = {0 };
 	int err;
 
 	// Allocate buffer for the maximum possible amount of log entries
@@ -372,8 +372,8 @@ struct xnvme_spec_znd_log_changes *xnvme_znd_log_changes_from_dev(struct xnvme_d
 	}
 
 	// Retrieve Changed Zone Information List for namespace with nsid=1
-	err = xnvme_adm_log(dev, XNVME_SPEC_LOG_ZND_CHANGES, 0, 0,
-			    xnvme_dev_get_nsid(dev), 0, log, log_nbytes, &ctx);
+	err = xnvme_adm_log(dev, XNVME_SPEC_LOG_ZND_CHANGES, 0, 0, xnvme_dev_get_nsid(dev), 0, log,
+			    log_nbytes, &ctx);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("FAILED: xnvme_adm_log(XNVME_SPEC_LOG_TBD_ZCHG)");
 		xnvme_buf_free(dev, log);
