@@ -97,6 +97,7 @@ struct xnvme_znd_report *
 xnvme_znd_report_from_dev(struct xnvme_dev *dev, uint64_t slba, size_t limit, uint8_t extended)
 {
 	const struct xnvme_geo *geo = xnvme_dev_get_geo(dev);
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	const uint32_t nsid = xnvme_dev_get_nsid(dev);
 	size_t dbuf_nentries_max;
 	size_t dbuf_nbytes;
@@ -105,7 +106,6 @@ xnvme_znd_report_from_dev(struct xnvme_dev *dev, uint64_t slba, size_t limit, ui
 	struct xnvme_znd_report *report = NULL;
 	enum xnvme_spec_znd_cmd_mgmt_recv_action action;
 
-	struct xnvme_cmd_ctx ctx = {0 };
 	int err;
 
 	report = znd_report_init(dev, slba, limit, extended);
@@ -212,11 +212,10 @@ xnvme_znd_report_find_arbitrary(const struct xnvme_znd_report *report,
 }
 
 int
-xnvme_znd_descr_from_dev(struct xnvme_dev *dev, uint64_t slba,
-			 struct xnvme_spec_znd_descr *zdescr)
+xnvme_znd_descr_from_dev(struct xnvme_dev *dev, uint64_t slba, struct xnvme_spec_znd_descr *zdescr)
 {
 	const uint32_t nsid = xnvme_dev_get_nsid(dev);
-	struct xnvme_cmd_ctx ctx = {0 };
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_spec_znd_report_hdr *hdr;
 	size_t dbuf_nbytes;
 	void *dbuf;
@@ -259,7 +258,7 @@ xnvme_znd_descr_from_dev_in_state(struct xnvme_dev *dev, enum xnvme_spec_znd_sta
 				  struct xnvme_spec_znd_descr *zdescr)
 {
 	const uint32_t nsid = xnvme_dev_get_nsid(dev);
-	struct xnvme_cmd_ctx ctx = {0 };
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_spec_znd_report_hdr *hdr;
 	size_t dbuf_nbytes;
 	void *dbuf;
@@ -302,9 +301,8 @@ xnvme_znd_descr_from_dev_in_state(struct xnvme_dev *dev, enum xnvme_spec_znd_sta
 	}
 	memset(dbuf, 0, dbuf_nbytes);
 
-	err = xnvme_znd_mgmt_recv(dev, nsid, 0x0,
-				  XNVME_SPEC_ZND_CMD_MGMT_RECV_ACTION_REPORT, sfield, 0x1,
-				  dbuf, dbuf_nbytes, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_znd_mgmt_recv(dev, nsid, 0x0, XNVME_SPEC_ZND_CMD_MGMT_RECV_ACTION_REPORT,
+				  sfield, 0x1, dbuf, dbuf_nbytes, XNVME_CMD_SYNC, &ctx);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("FAILED: xnvme_znd_mgmt_recv()");
 		err = err ? err : -EIO;
@@ -330,7 +328,7 @@ xnvme_znd_stat(struct xnvme_dev *dev, enum xnvme_spec_znd_cmd_mgmt_recv_action_s
 	       uint64_t *nzones)
 {
 	const uint32_t nsid = xnvme_dev_get_nsid(dev);
-	struct xnvme_cmd_ctx ctx = {0 };
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_spec_znd_report_hdr *hdr;
 	const size_t hdr_nbytes = sizeof(*hdr);
 	;
@@ -343,9 +341,8 @@ xnvme_znd_stat(struct xnvme_dev *dev, enum xnvme_spec_znd_cmd_mgmt_recv_action_s
 	}
 	memset(hdr, 0, hdr_nbytes);
 
-	err = xnvme_znd_mgmt_recv(dev, nsid, 0x0,
-				  XNVME_SPEC_ZND_CMD_MGMT_RECV_ACTION_REPORT, sfield, 0x0,
-				  hdr, hdr_nbytes, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_znd_mgmt_recv(dev, nsid, 0x0, XNVME_SPEC_ZND_CMD_MGMT_RECV_ACTION_REPORT,
+				  sfield, 0x0, hdr, hdr_nbytes, XNVME_CMD_SYNC, &ctx);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("FAILED: xnvme_znd_mgmt_recv()");
 		err = err ? err : -EIO;
