@@ -186,8 +186,7 @@ xnvme_znd_report_from_dev(struct xnvme_dev *dev, uint64_t slba, size_t limit, ui
 
 int
 xnvme_znd_report_find_arbitrary(const struct xnvme_znd_report *report,
-				enum xnvme_spec_znd_state state,
-				uint64_t *zlba, int opts)
+				enum xnvme_spec_znd_state state, uint64_t *zlba, int opts)
 {
 	uint64_t arb;
 
