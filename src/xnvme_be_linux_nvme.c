@@ -120,9 +120,8 @@ ioctl_wrap(struct xnvme_dev *dev, unsigned long ioctl_req, struct xnvme_cmd_ctx 
 }
 
 int
-xnvme_be_linux_nvme_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			   size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes,
-			   int XNVME_UNUSED(opts))
+xnvme_be_linux_nvme_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			   size_t mbuf_nbytes)
 {
 	int err;
 
@@ -132,7 +131,7 @@ xnvme_be_linux_nvme_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, voi
 	ctx->cmd.common.mptr = (uint64_t)mbuf;
 	ctx->cmd.common.dptr.lnx_ioctl.metadata_len = mbuf_nbytes;
 
-	err = ioctl_wrap(dev, NVME_IOCTL_IO_CMD, ctx);
+	err = ioctl_wrap(ctx->dev, NVME_IOCTL_IO_CMD, ctx);
 	if (err) {
 		XNVME_DEBUG("FAILED: ioctl_wrap(), err: %d", err);
 		return err;
@@ -142,9 +141,8 @@ xnvme_be_linux_nvme_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, voi
 }
 
 int
-xnvme_be_linux_nvme_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			      size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes,
-			      int XNVME_UNUSED(opts))
+xnvme_be_linux_nvme_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+			      void *mbuf, size_t mbuf_nbytes)
 {
 	int err;
 
@@ -154,7 +152,7 @@ xnvme_be_linux_nvme_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, 
 	ctx->cmd.common.mptr = (uint64_t)mbuf;
 	ctx->cmd.common.dptr.lnx_ioctl.metadata_len = mbuf_nbytes;
 
-	err = ioctl_wrap(dev, NVME_IOCTL_ADMIN_CMD, ctx);
+	err = ioctl_wrap(ctx->dev, NVME_IOCTL_ADMIN_CMD, ctx);
 	if (err) {
 		XNVME_DEBUG("FAILED: ioctl_wrap() err: %d", err);
 		return err;
