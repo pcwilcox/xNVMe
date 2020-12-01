@@ -324,34 +324,7 @@ int
 xnvme_queue_set_cb(struct xnvme_queue *queue, xnvme_queue_cb cb, void *cb_arg);
 
 /**
- * Enumeration of `xnvme_cmd` options
- *
- * @enum xnvme_cmd_opts
- */
-enum xnvme_cmd_opts {
-	XNVME_CMD_SYNC          = 0x1 << 0,     ///< XNVME_CMD_SYNC: Synchronous command
-	XNVME_CMD_ASYNC         = 0x1 << 1,     ///< XNVME_CMD_ASYNC: Asynchronous command
-
-	XNVME_CMD_UPLD_SGLD     = 0x1 << 2,     ///< XNVME_CMD_UPLD_SGLD: User-managed SGL data
-	XNVME_CMD_UPLD_SGLM     = 0x1 << 3,     ///< XNVME_CMD_UPLD_SGLM: User-managed SGL meta
-};
-
-#define XNVME_CMD_MASK_IOMD ( XNVME_CMD_SYNC | XNVME_CMD_ASYNC )
-#define XNVME_CMD_MASK_UPLD ( XNVME_CMD_UPLD_SGLD | XNVME_CMD_UPLD_SGLM )
-#define XNVME_CMD_MASK ( XNVME_CMD_MASK_IOMD | XNVME_CMD_MASK_UPLD )
-
-#define XNVME_CMD_DEF_IOMD XNVME_CMD_SYNC
-#define XNVME_CMD_DEF_UPLD ( 0x0 )
-
-/**
  * Pass a NVMe IO Command through to the device via the given ::xnvme_cmd_ctx
- *
- * When constructing the command then take note of the following:
- *
- * @note User-defined payloads -- When 'opts' include XNVME_CMD_UPLD_SGLD or XNVME_CMD_UPLD_SGLM
- * then the respective buffer points to a user-defined payload setup with the `xnvme_sgl` helper
- * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
- * helper functions, pdst, data, and meta fields must be also be set by you
  *
  * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload
@@ -367,11 +340,6 @@ xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *
 
 /**
  * Pass a NVMe Admin Command through to the device with minimal intervention
- *
- * @note User-defined payloads -- When 'opts' include XNVME_CMD_UPLD_SGLD or XNVME_CMD_UPLD_SGLM
- * then the respective buffer points to a user-defined payload setup with the `xnvme_sgl` helper
- * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
- * helper functions, pdst, data, and meta fields must be also be set by you
  *
  * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload

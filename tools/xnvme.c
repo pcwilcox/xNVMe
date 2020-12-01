@@ -453,7 +453,7 @@ sub_sanitize(struct xnvmec *cli)
 }
 
 static int
-sub_pass(struct xnvmec *cli, int opts, int admin)
+sub_pass(struct xnvmec *cli, int admin)
 {
 	struct xnvme_dev *dev = cli->args.dev;
 	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
@@ -463,7 +463,7 @@ sub_pass(struct xnvmec *cli, int opts, int admin)
 	size_t meta_nbytes = cli->args.meta_nbytes;
 	int err;
 
-	xnvmec_pinf("xnvme_cmd_pass(..., CMD_OPTS=0x%x, ...)", opts);
+	xnvmec_pinf("xnvme_cmd_pass(...)");
 
 	err = xnvmec_buf_from_file(&ctx.cmd, sizeof(ctx.cmd), cli->args.cmd_input);
 	if (err) {
@@ -545,13 +545,13 @@ exit:
 static int
 sub_pioc(struct xnvmec *cli)
 {
-	return sub_pass(cli, XNVME_CMD_SYNC, 0);
+	return sub_pass(cli, 0);
 }
 
 static int
 sub_padc(struct xnvmec *cli)
 {
-	return sub_pass(cli, 0x0, 1);
+	return sub_pass(cli, 1);
 }
 
 static int
