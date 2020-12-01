@@ -123,9 +123,8 @@ _linux_thr_poke(struct xnvme_queue *q, uint32_t max)
 
 		STAILQ_REMOVE_HEAD(&qp->sq, link);
 
-		err = queue->base.dev->be.sync.cmd_io(entry->dev, entry->ctx, entry->dbuf,
-						      entry->dbuf_nbytes, entry->mbuf,
-						      entry->mbuf_nbytes, XNVME_CMD_SYNC);
+		err = queue->base.dev->be.sync.cmd_io(entry->ctx, entry->dbuf, entry->dbuf_nbytes,
+						      entry->mbuf, entry->mbuf_nbytes);
 		if (err) {
 			XNVME_DEBUG("FAILED: err: %d", err);
 			entry->ctx->cpl.status.sc = err;
@@ -171,8 +170,8 @@ _linux_thr_wait(struct xnvme_queue *queue)
 }
 
 static inline int
-_linux_thr_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
-		  void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
+_linux_thr_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		  size_t mbuf_nbytes)
 {
 	struct xnvme_queue_thr *queue = (void *)ctx->async.queue;
 	struct _qp *qp = queue->qp;
@@ -191,7 +190,7 @@ _linux_thr_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, 
 	}
 	STAILQ_REMOVE_HEAD(&qp->rp, link);
 
-	entry->dev = dev;
+	entry->dev = ctx->dev;
 	entry->ctx = ctx;
 	entry->dbuf = dbuf;
 	entry->dbuf_nbytes = dbuf_nbytes;
@@ -206,8 +205,7 @@ _linux_thr_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, 
 }
 
 int
-_linux_thr_supported(struct xnvme_dev *XNVME_UNUSED(dev),
-		     uint32_t XNVME_UNUSED(opts))
+_linux_thr_supported(struct xnvme_dev *XNVME_UNUSED(dev), uint32_t XNVME_UNUSED(opts))
 {
 	return 1;
 }
