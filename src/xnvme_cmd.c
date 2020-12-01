@@ -93,11 +93,10 @@ xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *
 
 	switch (cmd_opts & XNVME_CMD_MASK_IOMD) {
 	case XNVME_CMD_ASYNC:
-		return ctx->dev->be.async.cmd_io(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, ctx->opts);
+		return ctx->dev->be.async.cmd_io(ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes);
 
 	case XNVME_CMD_SYNC:
-		return ctx->dev->be.sync.cmd_io(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes,
-						ctx->opts);
+		return ctx->dev->be.sync.cmd_io(ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes);
 
 	default:
 		XNVME_DEBUG("FAILED: command-mode not provided");
@@ -118,5 +117,5 @@ xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, 
 		xnvme_sgl_setup(ctx, dbuf, mbuf);
 	}
 
-	return ctx->dev->be.sync.cmd_admin(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, ctx->opts);
+	return ctx->dev->be.sync.cmd_admin(ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes);
 }
