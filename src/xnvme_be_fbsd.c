@@ -102,7 +102,7 @@ xnvme_be_fbsd_dev_idfy(struct xnvme_dev *dev)
 
 		memset(idfy, 0, sizeof(*idfy));
 		ctx = xnvme_cmd_ctx_from_dev(dev)
-		err = xnvme_cmd_idfy_ns(dev, ioctl_nsid, idfy, &ctx);
+		      err = xnvme_cmd_idfy_ns(dev, ioctl_nsid, idfy, &ctx);
 		if (err || xnvme_req_cpl_status(&ctx)) {
 			XNVME_DEBUG("FAILED: identify namespace, err: %d", err);
 			xnvme_buf_free(dev, idfy);
