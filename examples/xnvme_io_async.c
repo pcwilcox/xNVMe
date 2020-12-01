@@ -37,7 +37,9 @@ cb_pool(struct xnvme_cmd_ctx *ctx, void *cb_arg)
 		cb_args->ecount += 1;
 	}
 
-	SLIST_INSERT_HEAD(&ctx->pool->head, ctx, link);
+	xnvme_queue_put_cmd_ctx(ctx->async.queue, ctx);
+
+	//SLIST_INSERT_HEAD(&ctx->pool->head, ctx, link);
 }
 
 /**
@@ -64,7 +66,6 @@ sub_async_read(struct xnvmec *cli)
 
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
-	struct xnvme_cmd_ctx_pool *pool = NULL;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -98,22 +99,13 @@ sub_async_read(struct xnvmec *cli)
 		goto exit;
 	}
 
-	xnvmec_pinf("Initializing async. context + alloc/init requests");
+	xnvmec_pinf("Initializing queue");
 	err = xnvme_queue_init(dev, qd, 0, &queue);
 	if (err) {
 		xnvmec_perr("xnvme_queue_init()", err);
 		goto exit;
 	}
-	err = xnvme_cmd_ctx_pool_alloc(&pool, qd + 1);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_alloc()", err);
-		goto exit;
-	}
-	err = xnvme_cmd_ctx_pool_init(pool, queue, cb_pool, &cb_args);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_init()", err);
-		goto exit;
-	}
+	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
 	xnvmec_pinf("Read nsect: %zu, [0x%016lx,0x%016lx], qd: %d, uri: '%s'",
 		    nsect, slba, elba, qd, cli->args.uri);
@@ -122,13 +114,11 @@ sub_async_read(struct xnvmec *cli)
 
 	payload = buf;
 	for (uint64_t sect = 0; (sect < nsect) && !cb_args.ecount;) {
-		struct xnvme_cmd_ctx *ctx = SLIST_FIRST(&pool->head);
-
-		SLIST_REMOVE_HEAD(&pool->head, link);
+		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_read(dev, nsid, slba + sect, 0, payload,
-				     NULL, XNVME_CMD_ASYNC, ctx);
+		err = xnvme_nvm_read(dev, nsid, slba + sect, 0, payload, NULL, XNVME_CMD_ASYNC,
+				     ctx);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -141,6 +131,7 @@ submit:
 
 		default:
 			xnvmec_perr("submission-error", EIO);
+			xnvme_queue_put_cmd_ctx(queue, ctx);
 			goto exit;
 		}
 
@@ -186,7 +177,6 @@ exit:
 			xnvmec_perr("xnvme_queue_term()", err_exit);
 		}
 	}
-	xnvme_cmd_ctx_pool_free(pool);
 	xnvme_buf_free(dev, buf);
 
 	return err < 0 ? err : 0;
@@ -216,7 +206,6 @@ sub_async_write(struct xnvmec *cli)
 
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
-	struct xnvme_cmd_ctx_pool *pool = NULL;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -244,28 +233,21 @@ sub_async_write(struct xnvmec *cli)
 		xnvmec_perr("xnvme_buf_alloc()", err);
 		goto exit;
 	}
-	err = xnvmec_buf_fill(buf, buf_nbytes, cli->args.data_input ? cli->args.data_input : "anum");
+	err = xnvmec_buf_fill(buf, buf_nbytes,
+			      cli->args.data_input ? cli->args.data_input : "anum");
 	if (err) {
 		xnvmec_perr("xnvmec_buf_fill()", err);
 		goto exit;
 	}
 
-	xnvmec_pinf("Initializing queue and alloc/init ctx-pool");
+	xnvmec_pinf("Initializing queue");
 	err = xnvme_queue_init(dev, qd, 0, &queue);
 	if (err) {
 		xnvmec_perr("xnvme_queue_init()", err);
 		goto exit;
 	}
-	err = xnvme_cmd_ctx_pool_alloc(&pool, qd + 1);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_alloc()", err);
-		goto exit;
-	}
-	err = xnvme_cmd_ctx_pool_init(pool, queue, cb_pool, &cb_args);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_init()", err);
-		goto exit;
-	}
+	xnvmec_pinf("Setting queue default callback function and arguments");
+	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
 	xnvmec_pinf("Write nsect: %zu, [0x%016lx,0x%016lx], qd: %d, uri: '%s'",
 		    nsect, slba, elba, qd, cli->args.uri);
@@ -274,13 +256,11 @@ sub_async_write(struct xnvmec *cli)
 
 	payload = buf;
 	for (uint64_t sect = 0; (sect < nsect) && !cb_args.ecount;) {
-		struct xnvme_cmd_ctx *ctx = SLIST_FIRST(&pool->head);
-
-		SLIST_REMOVE_HEAD(&pool->head, link);
+		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_write(dev, nsid, slba + sect, 0, payload,
-				      NULL, XNVME_CMD_ASYNC, ctx);
+		err = xnvme_nvm_write(dev, nsid, slba + sect, 0, payload, NULL, XNVME_CMD_ASYNC,
+				      ctx);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -293,6 +273,7 @@ submit:
 
 		default:
 			xnvmec_perr("submission-error", EIO);
+			xnvme_queue_put_cmd_ctx(queue, ctx);
 			goto exit;
 		}
 
@@ -328,7 +309,6 @@ exit:
 			xnvmec_perr("xnvme_queue_term()", err_exit);
 		}
 	}
-	xnvme_cmd_ctx_pool_free(pool);
 	xnvme_buf_free(dev, buf);
 
 	return err < 0 ? err : 0;
