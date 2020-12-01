@@ -794,11 +794,11 @@ xnvme_be_spdk_enumerate(struct xnvme_enumeration *list, const char *sys_uri, int
 int
 xnvme_be_spdk_dev_idfy(struct xnvme_dev *dev)
 {
+	struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
 	struct xnvme_spec_idfy *idfy_ctrlr = NULL, *idfy_ns = NULL;
 	const struct spdk_nvme_ctrlr_data *ctrlr_data;
 	const struct spdk_nvme_ns_data *ns_data;
-	struct xnvme_cmd_ctx ctx = {0 };
 	int err;
 
 	dev->dtype = XNVME_DEV_TYPE_NVME_NAMESPACE;
@@ -844,19 +844,18 @@ xnvme_be_spdk_dev_idfy(struct xnvme_dev *dev)
 		struct xnvme_spec_znd_idfy_ns *zns = (void *)idfy_ns;
 
 		memset(idfy_ctrlr, 0, sizeof(*idfy_ctrlr));
-		memset(&ctx, 0, sizeof(ctx));
-		err = xnvme_adm_idfy_ctrlr_csi(dev, XNVME_SPEC_CSI_ZONED,
-					       idfy_ctrlr, &ctx);
+		ctx = xnvme_cmd_ctx_from_dev(dev);
+
+		err = xnvme_adm_idfy_ctrlr_csi(dev, XNVME_SPEC_CSI_ZONED, idfy_ctrlr, &ctx);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ctrlr-zns");
 			goto not_zns;
 		}
 
 		memset(idfy_ns, 0, sizeof(*idfy_ns));
-		memset(&ctx, 0, sizeof(ctx));
-		err = xnvme_adm_idfy_ns_csi(dev, dev->nsid,
-					    XNVME_SPEC_CSI_ZONED, idfy_ns,
-					    &ctx);
+		ctx = xnvme_cmd_ctx_from_dev(dev);
+
+		err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_ZONED, idfy_ns, &ctx);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ns-zns");
 			goto not_zns;
@@ -879,7 +878,8 @@ not_zns:
 
 	// Attempt to identify LBLK Namespace
 	memset(idfy_ns, 0, sizeof(*idfy_ns));
-	memset(&ctx, 0, sizeof(ctx));
+	ctx = xnvme_cmd_ctx_from_dev(dev);
+
 	err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_NVM, idfy_ns, &ctx);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("INFO: not csi-specific id-NVM");
@@ -1209,10 +1209,10 @@ xnvme_be_spdk_sync_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void
 			  size_t dbuf_nbytes, void *mbuf, size_t XNVME_UNUSED(mbuf_nbytes),
 			  int XNVME_UNUSED(opts))
 {
+	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
 	struct spdk_nvme_qpair *qpair = state->qpair;
 	pthread_mutex_t *qpair_lock = &state->qpair_lock;
-	struct xnvme_cmd_ctx ctx_local = {0 };
 
 	int err = 0;
 
@@ -1272,8 +1272,8 @@ int
 xnvme_be_spdk_sync_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
 			     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
 {
+	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(dev);
 	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
-	struct xnvme_cmd_ctx ctx_local = {0 };
 
 	if (!ctx) {	// Ensure that a ctx is available
 		ctx = &ctx_local;
