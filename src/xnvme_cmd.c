@@ -49,46 +49,6 @@ xnvme_sgl_setup(struct xnvme_dev *dev, struct xnvme_spec_cmd *cmd, void *data, v
 }
 
 void
-xnvme_cmd_ctx_pool_free(struct xnvme_cmd_ctx_pool *pool)
-{
-	free(pool);
-}
-
-int
-xnvme_cmd_ctx_pool_alloc(struct xnvme_cmd_ctx_pool **pool, uint32_t capacity)
-{
-	const size_t nbytes = capacity * sizeof(*(*pool)->elm) + sizeof(**pool);
-
-	(*pool) = malloc(nbytes);
-	if (!(*pool)) {
-		return -errno;
-	}
-	memset((*pool), 0, nbytes);
-
-	SLIST_INIT(&(*pool)->head);
-
-	(*pool)->capacity = capacity;
-
-	return 0;
-}
-
-int
-xnvme_cmd_ctx_pool_init(struct xnvme_cmd_ctx_pool *pool, struct xnvme_queue *queue,
-			xnvme_queue_cb cb, void *cb_args)
-{
-	for (uint32_t i = 0; i < pool->capacity; ++i) {
-		pool->elm[i].pool = pool;
-		pool->elm[i].async.queue = queue;
-		pool->elm[i].async.cb = cb;
-		pool->elm[i].async.cb_arg = cb_args;
-
-		SLIST_INSERT_HEAD(&pool->head, &pool->elm[i], link);
-	}
-
-	return 0;
-}
-
-void
 xnvme_cmd_ctx_pr(const struct xnvme_cmd_ctx *ctx, int XNVME_UNUSED(opts))
 {
 	printf("xnvme_cmd_ctx: ");
