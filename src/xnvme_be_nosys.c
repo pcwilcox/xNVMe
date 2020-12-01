@@ -6,20 +6,18 @@
 #include <xnvme_be_nosys.h>
 
 int
-xnvme_be_nosys_sync_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev),
-			   struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
+xnvme_be_nosys_sync_cmd_io(struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
 			   size_t XNVME_UNUSED(dbuf_nbytes), void *XNVME_UNUSED(mbuf),
-			   size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts))
+			   size_t XNVME_UNUSED(mbuf_nbytes))
 {
 	XNVME_DEBUG("FAILED: not implemented(possibly intentional)");
 	return -ENOSYS;
 }
 
 int
-xnvme_be_nosys_sync_cmd_admin(struct xnvme_dev *XNVME_UNUSED(dev),
-			      struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
+xnvme_be_nosys_sync_cmd_admin(struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
 			      size_t XNVME_UNUSED(dbuf_nbytes), void *XNVME_UNUSED(mbuf),
-			      size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts))
+			      size_t XNVME_UNUSED(mbuf_nbytes))
 {
 	XNVME_DEBUG("FAILED: not implemented(possibly intentional)");
 	return -ENOSYS;
@@ -40,10 +38,9 @@ xnvme_be_nosys_async_supported(struct xnvme_dev *XNVME_UNUSED(dev), uint32_t XNV
 }
 
 int
-xnvme_be_nosys_async_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev),
-			    struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
+xnvme_be_nosys_async_cmd_io(struct xnvme_cmd_ctx *XNVME_UNUSED(ctx), void *XNVME_UNUSED(dbuf),
 			    size_t XNVME_UNUSED(dbuf_nbytes), void *XNVME_UNUSED(mbuf),
-			    size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts))
+			    size_t XNVME_UNUSED(mbuf_nbytes))
 {
 	XNVME_DEBUG("FAILED: not implemented(possibly intentional)");
 	return -ENOSYS;
