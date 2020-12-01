@@ -82,8 +82,8 @@ xnvme_cmd_ctx_from_queue(struct xnvme_queue *queue)
 }
 
 int
-xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
-	       void *mbuf, size_t mbuf_nbytes, int opts)
+xnvme_cmd_pass(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
+	       size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
 {
 	const int cmd_opts = opts & XNVME_CMD_MASK;
 
@@ -93,10 +93,10 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 
 	switch (cmd_opts & XNVME_CMD_MASK_IOMD) {
 	case XNVME_CMD_ASYNC:
-		return dev->be.async.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
+		return ctx->dev->be.async.cmd_io(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
 
 	case XNVME_CMD_SYNC:
-		return ctx->dev->be.sync.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes,
+		return ctx->dev->be.sync.cmd_io(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes,
 						opts);
 
 	default:
@@ -106,7 +106,7 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 }
 
 int
-xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
+xnvme_cmd_pass_admin(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
 		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
 {
 	if (XNVME_CMD_ASYNC & opts) {
@@ -118,5 +118,5 @@ xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbu
 		xnvme_sgl_setup(ctx, dbuf, mbuf, opts);
 	}
 
-	return dev->be.sync.cmd_admin(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
+	return ctx->dev->be.sync.cmd_admin(ctx->dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
 }
