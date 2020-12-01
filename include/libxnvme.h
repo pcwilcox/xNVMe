@@ -281,11 +281,6 @@ int
 xnvme_queue_put_cmd_ctx(struct xnvme_queue *queue, struct xnvme_cmd_ctx *ctx);
 
 /**
- * Forward declaration, see definition further down
- */
-struct xnvme_cmd_ctx;
-
-/**
  * Signature of function used with Command Queues for async. callback upon command-completion
  */
 typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
