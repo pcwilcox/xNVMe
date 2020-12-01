@@ -253,6 +253,34 @@ int
 xnvme_queue_wait(struct xnvme_queue *queue);
 
 /**
+ * Retrieve a command-context from the given queue for async. command execution with the queue
+ *
+ * @note The command-context is managed by the queue, thus, return it to the queue via
+ * ::xnvme_queue_put_cmd_ctx
+ *
+ * @note This is not thread-safe
+ *
+ * @param queue Pointer to the the ::xnvme_queue to retrieve a command-context for
+ *
+ * @return On success, a command-context is returned. On error, NULL is returned and `errno` is set
+ * to indicate the error.
+ */
+struct xnvme_cmd_ctx *
+xnvme_queue_get_cmd_ctx(struct xnvme_queue *queue);
+
+/**
+ * Hand back a command-context previously retrieve using ::xnvme_queue_get_cmd_ctx
+ *
+ * @note This function is not thread-safe
+ *
+ * @param queue Pointer to the ::xnvme_queue to hand back the command-context to
+ *
+ * @return On success, 0 is returned. On error, negative `errno` is returned.
+ */
+int
+xnvme_queue_put_cmd_ctx(struct xnvme_queue *queue, struct xnvme_cmd_ctx *ctx);
+
+/**
  * Forward declaration, see definition further down
  */
 struct xnvme_cmd_ctx;

@@ -101,3 +101,26 @@ xnvme_queue_get_outstanding(struct xnvme_queue *queue)
 {
 	return queue->base.outstanding;
 }
+
+struct xnvme_cmd_ctx *
+xnvme_queue_get_cmd_ctx(struct xnvme_queue *queue)
+{
+	struct xnvme_cmd_ctx *ctx = SLIST_FIRST(&queue->base.pool);
+
+	if (!ctx) {
+		errno = ENOMEM;
+		return ctx;
+	}
+
+	SLIST_REMOVE_HEAD(&queue->base.pool, link);
+
+	return ctx;
+}
+
+int
+xnvme_queue_put_cmd_ctx(struct xnvme_queue *queue, struct xnvme_cmd_ctx *ctx)
+{
+	SLIST_INSERT_HEAD(&queue->base.pool, ctx, link);
+
+	return 0;
+}
