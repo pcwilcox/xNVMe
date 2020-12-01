@@ -98,7 +98,7 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 
 	case XNVME_CMD_SYNC:
 		return ctx->dev->be.sync.cmd_io(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes,
-						   opts);
+						opts);
 
 	default:
 		XNVME_DEBUG("FAILED: command-mode not provided");
