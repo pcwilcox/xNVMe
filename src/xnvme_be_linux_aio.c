@@ -144,8 +144,8 @@ _ring_inc(struct xnvme_queue_aio *queue, unsigned int *val, unsigned int add)
 }
 
 int
-_linux_aio_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
-		  size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
+_linux_aio_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		  size_t mbuf_nbytes)
 {
 	struct xnvme_queue_aio *queue  = (void *)ctx->async.queue;
 	struct xnvme_be_linux_state *state = (void *)queue->base.dev->be.state;
