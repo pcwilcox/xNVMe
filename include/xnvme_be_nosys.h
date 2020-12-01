@@ -6,19 +6,19 @@
 extern struct xnvme_be xnvme_be_nosys;
 
 int
-xnvme_be_nosys_sync_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			   size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_be_nosys_sync_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			   size_t mbuf_nbytes);
 
 int
-xnvme_be_nosys_sync_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			      size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_be_nosys_sync_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+			      void *mbuf, size_t mbuf_nbytes);
 
 int
 xnvme_be_nosys_sync_supported(struct xnvme_dev *dev, uint32_t opts);
 
 int
-xnvme_be_nosys_async_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			    size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_be_nosys_async_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			    size_t mbuf_nbytes);
 
 int
 xnvme_be_nosys_queue_poke(struct xnvme_queue *queue, uint32_t max);
