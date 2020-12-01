@@ -103,10 +103,9 @@ _linux_nil_wait(struct xnvme_queue *queue)
 }
 
 static inline int
-_linux_nil_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx,
-		  void *XNVME_UNUSED(dbuf), size_t XNVME_UNUSED(dbuf_nbytes),
-		  void *XNVME_UNUSED(mbuf), size_t XNVME_UNUSED(mbuf_nbytes),
-		  int XNVME_UNUSED(opts))
+_linux_nil_cmd_io(struct xnvme_cmd_ctx *ctx, void *XNVME_UNUSED(dbuf),
+		  size_t XNVME_UNUSED(dbuf_nbytes), void *XNVME_UNUSED(mbuf),
+		  size_t XNVME_UNUSED(mbuf_nbytes))
 {
 	struct xnvme_queue_nil *queue = (void *)ctx->async.queue;
 
