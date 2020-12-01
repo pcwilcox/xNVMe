@@ -84,8 +84,7 @@ read_from_lba_range(uint8_t *rbuf, uint64_t rng_slba, uint64_t mdts_naddr,
 		size_t rbuf_ofz = count * geo->lba_nbytes;
 		uint64_t slba = rng_slba + count * 4;
 
-		err = xnvme_nvm_read(dev, nsid, slba, 0, rbuf + rbuf_ofz, NULL, XNVME_CMD_SYNC,
-				     &ctx);
+		err = xnvme_nvm_read(&ctx, nsid, slba, 0, rbuf + rbuf_ofz, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_pinf("xnvme_nvm_read(): {err: 0x%x, slba: 0x%016lx}", err, slba);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -114,7 +113,7 @@ fill_lba_range_and_write_buffer_with_character(uint8_t *wbuf, size_t buf_nbytes,
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		uint64_t nlb = XNVME_MIN(rng_elba - slba, mdts_naddr) - 1;
 
-		err = xnvme_nvm_write(dev, nsid, slba, nlb, wbuf, NULL, XNVME_CMD_SYNC, &ctx);
+		err = xnvme_nvm_write(&ctx, nsid, slba, nlb, wbuf, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_pinf("xnvme_nvm_write(): {err: 0x%x, slba: 0x%016lx}", err, slba);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -175,8 +174,7 @@ sub_io(struct xnvmec *cli)
 		size_t wbuf_ofz = count * geo->lba_nbytes;
 		uint64_t slba = rng_slba + count * 4;
 
-		err = xnvme_nvm_write(dev, nsid, slba, 0, wbuf + wbuf_ofz, NULL, XNVME_CMD_SYNC,
-				      &ctx);
+		err = xnvme_nvm_write(&ctx, nsid, slba, 0, wbuf + wbuf_ofz, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_pinf("xnvme_nvm_write(): "
 				    "{err: 0x%x, slba: 0x%016lx}",
@@ -194,8 +192,7 @@ sub_io(struct xnvmec *cli)
 		size_t rbuf_ofz = count * geo->lba_nbytes;
 		uint64_t slba = rng_slba + count * 4;
 
-		err = xnvme_nvm_read(dev, nsid, slba, 0, rbuf + rbuf_ofz, NULL, XNVME_CMD_SYNC,
-				     &ctx);
+		err = xnvme_nvm_read(&ctx, nsid, slba, 0, rbuf + rbuf_ofz, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_pinf("xnvme_nvm_read(): "
 				    "{err: 0x%x, slba: 0x%016lx}",
@@ -298,8 +295,7 @@ test_scopy(struct xnvmec *cli)
 		sranges->entry[count].slba = slba;
 		sranges->entry[count].nlb = 0;
 
-		err = xnvme_nvm_write(dev, nsid, slba, 0, wbuf + wbuf_ofz, NULL, XNVME_CMD_SYNC,
-				      &ctx);
+		err = xnvme_nvm_write(&ctx, nsid, slba, 0, wbuf + wbuf_ofz, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_write()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -315,8 +311,8 @@ test_scopy(struct xnvmec *cli)
 		xnvmec_pinf("scopy sranges to sdlba: 0x%016lx", sdlba);
 		xnvme_spec_nvm_scopy_source_range_pr(sranges, nr, XNVME_PR_DEF);
 
-		err = xnvme_nvm_scopy(dev, nsid, sdlba, sranges->entry, nr, copy_fmt,
-				      XNVME_CMD_SYNC, &ctx);
+		err = xnvme_nvm_scopy(&ctx, nsid, sdlba, sranges->entry, nr, copy_fmt,
+				      XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_cmd_scopy()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -326,7 +322,7 @@ test_scopy(struct xnvmec *cli)
 
 		xnvmec_pinf("read sdlba: 0x%016lx", sdlba);
 		memset(rbuf, 0, buf_nbytes);
-		err = xnvme_nvm_read(dev, nsid, sdlba, nr, rbuf, NULL, XNVME_CMD_SYNC, &ctx);
+		err = xnvme_nvm_read(&ctx, nsid, sdlba, nr, rbuf, NULL, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -403,7 +399,7 @@ test_write_zeroes(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		uint16_t nlb = XNVME_MIN((rng_elba - slba) * geo->lba_nbytes, UINT16_MAX);
 
-		err = xnvme_nvm_write_zeroes(dev, nsid, slba, nlb, XNVME_CMD_SYNC, &ctx);
+		err = xnvme_nvm_write_zeroes(&ctx, nsid, slba, nlb, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_write_zeroes()", err);
 			err = err ? err : -EIO;
@@ -491,7 +487,7 @@ test_write_uncorrectable(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		uint16_t nlb = mdts_naddr;
 
-		err = xnvme_nvm_write_uncorrectable(dev, nsid, slba, nlb, XNVME_CMD_SYNC, &ctx);
+		err = xnvme_nvm_write_uncorrectable(&ctx, nsid, slba, nlb, XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_write_uncorrectable()", err);
 			err = err ? err : -EIO;
@@ -507,8 +503,8 @@ test_write_uncorrectable(struct xnvmec *cli)
 		uint64_t slba = rng_slba + count * 4;
 		int read_err;
 
-		read_err = xnvme_nvm_read(dev, nsid, slba, 0, rbuf + rbuf_ofz, NULL,
-					  XNVME_CMD_SYNC, &ctx);
+		read_err = xnvme_nvm_read(&ctx, nsid, slba, 0, rbuf + rbuf_ofz, NULL,
+					  XNVME_CMD_SYNC);
 		if (!read_err) {
 			err = -EIO;
 			xnvmec_perr("inefective xnvme_nvm_write_uncorrectable", err);

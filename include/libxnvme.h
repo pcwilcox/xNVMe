@@ -349,7 +349,7 @@ enum xnvme_cmd_opts {
 #define XNVME_CMD_DEF_UPLD ( 0x0 )
 
 /**
- * Pass a NVMe IO Command through to the device with minimal intervention
+ * Pass a NVMe IO Command through to the device via the given ::xnvme_cmd_ctx
  *
  * When constructing the command then take note of the following:
  *
@@ -358,7 +358,6 @@ enum xnvme_cmd_opts {
  * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
  * helper functions, pdst, data, and meta fields must be also be set by you
  *
- * @param dev Device handle obtained with xnvme_dev_open() / xnvme_dev_openf()
  * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload
  * @param dbuf_nbytes size of data-payload in bytes
@@ -369,8 +368,8 @@ enum xnvme_cmd_opts {
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
-	       void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+	       size_t mbuf_nbytes, int opts);
 
 /**
  * Pass a NVMe Admin Command through to the device with minimal intervention
@@ -380,7 +379,6 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
  * functions.  cmd.pdst, data, and meta fields must also be setup by the caller.  `xnvme_sgl`
  * helper functions, pdst, data, and meta fields must be also be set by you
  *
- * @param dev Device handle obtained with xnvme_dev_open() / xnvme_dev_openf()
  * @param ctx Pointer to command context (::xnvme_cmd_ctx)
  * @param dbuf pointer to data-payload
  * @param dbuf_nbytes size of data-payload in bytes
@@ -391,8 +389,8 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		     size_t mbuf_nbytes, int opts);
 
 /**
  * Retrieve a command-context for issuing commands to the given device

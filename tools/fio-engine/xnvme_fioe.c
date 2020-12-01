@@ -544,13 +544,13 @@ xnvme_fioe_queue(struct thread_data *td, struct io_u *io_u)
 
 	switch (io_u->ddir) {
 	case DDIR_READ:
-		err = xnvme_nvm_read(fwrap->dev, nsid, slba, nlb, io_u->xfer_buf, NULL,
-				     XNVME_CMD_ASYNC, ctx);
+		err = xnvme_nvm_read(ctx, nsid, slba, nlb, io_u->xfer_buf, NULL,
+                             XNVME_CMD_ASYNC);
 		break;
 
 	case DDIR_WRITE:
-		err = xnvme_nvm_write(fwrap->dev, nsid, slba, nlb, io_u->xfer_buf, NULL,
-				      XNVME_CMD_ASYNC, ctx);
+		err = xnvme_nvm_write(ctx, nsid, slba, nlb, io_u->xfer_buf, NULL,
+                              XNVME_CMD_ASYNC);
 		break;
 
 	default:
@@ -836,9 +836,9 @@ xnvme_fioe_reset_wp(struct thread_data *td, struct fio_file *f, uint64_t offset,
 			break;
 		}
 
-		err = xnvme_znd_mgmt_send(fwrap->dev, nsid, zslba,
-					  XNVME_SPEC_ZND_CMD_MGMT_SEND_RESET, 0x0, NULL,
-					  XNVME_CMD_SYNC, &ctx);
+		err = xnvme_znd_mgmt_send(&ctx, nsid, zslba,
+                                  XNVME_SPEC_ZND_CMD_MGMT_SEND_RESET, 0x0, NULL,
+                                  XNVME_CMD_SYNC);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			err = err ? err : -EIO;
 			XNVME_DEBUG("FAILED: err: %d, sc=%d", err, ctx.cpl.status.sc);

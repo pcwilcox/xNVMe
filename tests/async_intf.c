@@ -37,8 +37,8 @@ test_init_term(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		struct xnvme_spec_feat feat = { .val = 0 };
 
-		err = xnvme_adm_gfeat(dev, 0x0, XNVME_SPEC_FEAT_NQUEUES,
-				      XNVME_SPEC_FEAT_SEL_CURRENT, NULL, 0, &ctx);
+		err = xnvme_adm_gfeat(&ctx, 0x0, XNVME_SPEC_FEAT_NQUEUES,
+				      XNVME_SPEC_FEAT_SEL_CURRENT, NULL, 0);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_adm_gfeat()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

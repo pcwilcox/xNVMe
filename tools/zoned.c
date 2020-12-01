@@ -61,7 +61,7 @@ cmd_idfy_ctrlr(struct xnvmec *cli)
 		goto exit;
 	}
 
-	err = xnvme_adm_idfy_ctrlr_csi(dev, XNVME_SPEC_CSI_ZONED, &idfy->base, &ctx);
+	err = xnvme_adm_idfy_ctrlr_csi(&ctx, XNVME_SPEC_CSI_ZONED, &idfy->base);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_adm_idfy_ctrlr_csi()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -106,7 +106,7 @@ cmd_idfy_ns(struct xnvmec *cli)
 		goto exit;
 	}
 
-	err = xnvme_adm_idfy_ns_csi(dev, nsid, XNVME_SPEC_CSI_ZONED, &idfy->base, &ctx);
+	err = xnvme_adm_idfy_ns_csi(&ctx, nsid, XNVME_SPEC_CSI_ZONED, &idfy->base);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_adm_idfy_ns_csi()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -224,8 +224,7 @@ cmd_errors(struct xnvmec *cli)
 		goto exit;
 	}
 
-	err = xnvme_adm_log(cli->args.dev, XNVME_SPEC_LOG_ERRI, nsid, 0, 0, 0, log, log_nbytes,
-			    &ctx);
+	err = xnvme_adm_log(&ctx, XNVME_SPEC_LOG_ERRI, nsid, 0, 0, 0, log, log_nbytes);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_adm_log(XNVME_SPEC_LOG_ERRI)", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -294,7 +293,7 @@ cmd_read(struct xnvmec *cli)
 	}
 
 	xnvmec_pinf("Sending the command...");
-	err = xnvme_nvm_read(dev, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_nvm_read(&ctx, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_nvm_read()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -371,7 +370,7 @@ cmd_write(struct xnvmec *cli)
 	}
 
 	xnvmec_pinf("Sending the command...");
-	err = xnvme_nvm_write(dev, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_nvm_write(&ctx, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_nvm_write()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -420,7 +419,7 @@ cmd_append(struct xnvmec *cli)
 		goto exit;
 	}
 
-	err = xnvme_znd_append(dev, nsid, zslba, nlb, dbuf, NULL, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_znd_append(&ctx, nsid, zslba, nlb, dbuf, NULL, XNVME_CMD_SYNC);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_znd_append()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -476,7 +475,7 @@ _cmd_mgmt(struct xnvmec *cli, uint8_t action)
 		}
 	}
 
-	err = xnvme_znd_mgmt_send(dev, nsid, zslba, action, asf, dbuf, XNVME_CMD_SYNC, &ctx);
+	err = xnvme_znd_mgmt_send(&ctx, nsid, zslba, action, asf, dbuf, XNVME_CMD_SYNC);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_znd_mgmt_send()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

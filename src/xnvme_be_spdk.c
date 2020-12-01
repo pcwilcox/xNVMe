@@ -846,7 +846,7 @@ xnvme_be_spdk_dev_idfy(struct xnvme_dev *dev)
 		memset(idfy_ctrlr, 0, sizeof(*idfy_ctrlr));
 		ctx = xnvme_cmd_ctx_from_dev(dev);
 
-		err = xnvme_adm_idfy_ctrlr_csi(dev, XNVME_SPEC_CSI_ZONED, idfy_ctrlr, &ctx);
+		err = xnvme_adm_idfy_ctrlr_csi(&ctx, XNVME_SPEC_CSI_ZONED, idfy_ctrlr);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ctrlr-zns");
 			goto not_zns;
@@ -855,7 +855,7 @@ xnvme_be_spdk_dev_idfy(struct xnvme_dev *dev)
 		memset(idfy_ns, 0, sizeof(*idfy_ns));
 		ctx = xnvme_cmd_ctx_from_dev(dev);
 
-		err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_ZONED, idfy_ns, &ctx);
+		err = xnvme_adm_idfy_ns_csi(&ctx, dev->nsid, XNVME_SPEC_CSI_ZONED, idfy_ns);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ns-zns");
 			goto not_zns;
@@ -880,7 +880,7 @@ not_zns:
 	memset(idfy_ns, 0, sizeof(*idfy_ns));
 	ctx = xnvme_cmd_ctx_from_dev(dev);
 
-	err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_NVM, idfy_ns, &ctx);
+	err = xnvme_adm_idfy_ns_csi(&ctx, dev->nsid, XNVME_SPEC_CSI_NVM, idfy_ns);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("INFO: not csi-specific id-NVM");
 		XNVME_DEBUG("INFO: falling back to NVM assumption");

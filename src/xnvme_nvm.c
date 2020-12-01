@@ -9,8 +9,9 @@
 #include <xnvme_dev.h>
 
 int
-xnvme_adm_format(struct xnvme_dev *dev, uint32_t nsid, uint8_t lbaf, uint8_t zf, uint8_t mset,
-		 uint8_t ses, uint8_t pi, uint8_t pil, struct xnvme_cmd_ctx *ctx)
+xnvme_adm_format(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint8_t lbaf, uint8_t zf, uint8_t mset,
+		 uint8_t ses,
+		 uint8_t pi, uint8_t pil)
 {
 	ctx->cmd.common.opcode = XNVME_SPEC_NVM_OPC_FMT;
 	ctx->cmd.common.nsid = nsid;
@@ -21,12 +22,13 @@ xnvme_adm_format(struct xnvme_dev *dev, uint32_t nsid, uint8_t lbaf, uint8_t zf,
 	ctx->cmd.format.pil = pil;
 	ctx->cmd.format.ses = ses;
 
-	return xnvme_cmd_pass_admin(dev, ctx, NULL, 0, NULL, 0, 0x0);
+	return xnvme_cmd_pass_admin(ctx, NULL, 0, NULL, 0, 0x0);
 }
 
 int
-xnvme_nvm_sanitize(struct xnvme_dev *dev, uint8_t sanact, uint8_t ause, uint32_t ovrpat,
-		   uint8_t owpass, uint8_t oipbp, uint8_t nodas, struct xnvme_cmd_ctx *ctx)
+xnvme_nvm_sanitize(struct xnvme_cmd_ctx *ctx, uint8_t sanact, uint8_t ause, uint32_t ovrpat,
+		   uint8_t owpass,
+		   uint8_t oipbp, uint8_t nodas)
 {
 	ctx->cmd.common.opcode = XNVME_SPEC_NVM_OPC_SANITIZE;
 	ctx->cmd.sanitize.sanact = sanact;
@@ -37,15 +39,15 @@ xnvme_nvm_sanitize(struct xnvme_dev *dev, uint8_t sanact, uint8_t ause, uint32_t
 	ctx->cmd.sanitize.ause = ause;
 	ctx->cmd.sanitize.ovrpat = ovrpat;
 
-	return xnvme_cmd_pass_admin(dev, ctx, NULL, 0, NULL, 0, 0x0);
+	return xnvme_cmd_pass_admin(ctx, NULL, 0, NULL, 0, 0x0);
 }
 
 int
-xnvme_nvm_read(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nlb, void *dbuf,
-	       void *mbuf, int opts, struct xnvme_cmd_ctx *ctx)
+xnvme_nvm_read(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t nlb, void *dbuf,
+	       void *mbuf, int opts)
 {
-	size_t dbuf_nbytes = dbuf ? dev->geo.lba_nbytes * (nlb + 1) : 0;
-	size_t mbuf_nbytes = mbuf ? dev->geo.nbytes_oob * (nlb + 1) : 0;
+	size_t dbuf_nbytes = dbuf ? ctx->dev->geo.lba_nbytes * (nlb + 1) : 0;
+	size_t mbuf_nbytes = mbuf ? ctx->dev->geo.nbytes_oob * (nlb + 1) : 0;
 
 	// TODO: consider returning -EINVAL when mbuf is provided and namespace
 	// have extended-lba in effect
@@ -55,19 +57,19 @@ xnvme_nvm_read(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nlb
 	ctx->cmd.nvm.slba = slba;
 	ctx->cmd.nvm.nlb = nlb;
 
-	return xnvme_cmd_pass(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
+	return xnvme_cmd_pass(ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
 }
 
 int
-xnvme_nvm_write(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nlb,
+xnvme_nvm_write(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t nlb,
 		const void *dbuf,
-		const void *mbuf, int opts, struct xnvme_cmd_ctx *ctx)
+		const void *mbuf, int opts)
 {
 	void *cdbuf = (void *)dbuf;
 	void *cmbuf = (void *)mbuf;
 
-	size_t dbuf_nbytes = cdbuf ? dev->geo.lba_nbytes * (nlb + 1) : 0;
-	size_t mbuf_nbytes = cmbuf ? dev->geo.nbytes_oob * (nlb + 1) : 0;
+	size_t dbuf_nbytes = cdbuf ? ctx->dev->geo.lba_nbytes * (nlb + 1) : 0;
+	size_t mbuf_nbytes = cmbuf ? ctx->dev->geo.nbytes_oob * (nlb + 1) : 0;
 
 	// TODO: consider returning -EINVAL when mbuf is provided and namespace
 	// have extended-lba in effect
@@ -77,37 +79,37 @@ xnvme_nvm_write(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nl
 	ctx->cmd.nvm.slba = slba;
 	ctx->cmd.nvm.nlb = nlb;
 
-	return xnvme_cmd_pass(dev, ctx, cdbuf, dbuf_nbytes, cmbuf, mbuf_nbytes, opts);
+	return xnvme_cmd_pass(ctx, cdbuf, dbuf_nbytes, cmbuf, mbuf_nbytes, opts);
 }
 
 int
-xnvme_nvm_write_uncorrectable(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nlb,
-			      int opts, struct xnvme_cmd_ctx *ctx)
+xnvme_nvm_write_uncorrectable(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba,
+			      uint16_t nlb, int opts)
 {
 	ctx->cmd.common.opcode = XNVME_SPEC_NVM_OPC_WRITE_UNCORRECTABLE;
 	ctx->cmd.common.nsid = nsid;
 	ctx->cmd.nvm.slba = slba;
 	ctx->cmd.nvm.nlb = nlb;
 
-	return xnvme_cmd_pass(dev, ctx, NULL, 0, NULL, 0, opts);
+	return xnvme_cmd_pass(ctx, NULL, 0, NULL, 0, opts);
 }
 
 int
-xnvme_nvm_write_zeroes(struct xnvme_dev *dev, uint32_t nsid, uint64_t slba, uint16_t nlb, int opts,
-		       struct xnvme_cmd_ctx *ctx)
+xnvme_nvm_write_zeroes(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t sdlba, uint16_t nlb,
+		       int opts)
 {
 	ctx->cmd.common.opcode = XNVME_SPEC_NVM_OPC_WRITE_ZEROES;
 	ctx->cmd.common.nsid = nsid;
-	ctx->cmd.write_zeroes.slba = slba;
+	ctx->cmd.write_zeroes.slba = sdlba;
 	ctx->cmd.write_zeroes.nlb = nlb;
 
-	return xnvme_cmd_pass(dev, ctx, NULL, 0, NULL, 0, opts);
+	return xnvme_cmd_pass(ctx, NULL, 0, NULL, 0, opts);
 }
 
 int
-xnvme_nvm_scopy(struct xnvme_dev *dev, uint32_t nsid, uint64_t sdlba,
-		struct xnvme_spec_nvm_scopy_fmt_zero *ranges, uint8_t nr,
-		enum xnvme_nvm_scopy_fmt copy_fmt, int opts, struct xnvme_cmd_ctx *ctx)
+xnvme_nvm_scopy(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t sdlba,
+		struct xnvme_spec_nvm_scopy_fmt_zero *ranges,
+		uint8_t nr, enum xnvme_nvm_scopy_fmt copy_fmt, int opts)
 {
 	size_t ranges_nbytes = 0;
 
@@ -125,6 +127,6 @@ xnvme_nvm_scopy(struct xnvme_dev *dev, uint32_t nsid, uint64_t sdlba,
 
 	// TODO: consider the remaining command-fields
 
-	return xnvme_cmd_pass(dev, ctx, ranges, ranges_nbytes, NULL, 0, opts);
+	return xnvme_cmd_pass(ctx, ranges, ranges_nbytes, NULL, 0, opts);
 }
 

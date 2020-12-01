@@ -328,7 +328,7 @@ xnvme_be_linux_dev_idfy(struct xnvme_dev *dev)
 	// Retrieve and store ctrl and ns
 	memset(idfy_ctrlr, 0, sizeof(*idfy_ctrlr));
 	ctx = xnvme_cmd_ctx_from_dev(dev);
-	err = xnvme_adm_idfy_ctrlr(dev, idfy_ctrlr, &ctx);
+	err = xnvme_adm_idfy_ctrlr(&ctx, idfy_ctrlr);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("FAILED: identify controller");
 		err = err ? err : -EIO;
@@ -337,7 +337,7 @@ xnvme_be_linux_dev_idfy(struct xnvme_dev *dev)
 
 	memset(idfy_ns, 0, sizeof(*idfy_ns));
 	ctx = xnvme_cmd_ctx_from_dev(dev);
-	err = xnvme_adm_idfy_ns(dev, dev->nsid, idfy_ns, &ctx);
+	err = xnvme_adm_idfy_ns(&ctx, dev->nsid, idfy_ns);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("FAILED: identify namespace, err: %d", err);
 		goto exit;
@@ -356,7 +356,7 @@ xnvme_be_linux_dev_idfy(struct xnvme_dev *dev)
 
 		memset(idfy_ctrlr, 0, sizeof(*idfy_ctrlr));
 		ctx = xnvme_cmd_ctx_from_dev(dev);
-		err = xnvme_adm_idfy_ctrlr_csi(dev, XNVME_SPEC_CSI_ZONED, idfy_ctrlr, &ctx);
+		err = xnvme_adm_idfy_ctrlr_csi(&ctx, XNVME_SPEC_CSI_ZONED, idfy_ctrlr);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ctrlr-zns");
 			goto not_zns;
@@ -364,7 +364,7 @@ xnvme_be_linux_dev_idfy(struct xnvme_dev *dev)
 
 		memset(idfy_ns, 0, sizeof(*idfy_ns));
 		ctx = xnvme_cmd_ctx_from_dev(dev);
-		err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_ZONED, idfy_ns, &ctx);
+		err = xnvme_adm_idfy_ns_csi(&ctx, dev->nsid, XNVME_SPEC_CSI_ZONED, idfy_ns);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			XNVME_DEBUG("INFO: !id-ns-zns");
 			goto not_zns;
@@ -388,7 +388,7 @@ not_zns:
 	// Attempt to identify LBLK Namespace
 	memset(idfy_ns, 0, sizeof(*idfy_ns));
 	ctx = xnvme_cmd_ctx_from_dev(dev);
-	err = xnvme_adm_idfy_ns_csi(dev, dev->nsid, XNVME_SPEC_CSI_NVM, idfy_ns, &ctx);
+	err = xnvme_adm_idfy_ns_csi(&ctx, dev->nsid, XNVME_SPEC_CSI_NVM, idfy_ns);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		XNVME_DEBUG("INFO: not csi-specific id-NVM");
 		XNVME_DEBUG("INFO: falling back to NVM assumption");

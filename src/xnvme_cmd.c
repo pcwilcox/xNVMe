@@ -82,8 +82,8 @@ xnvme_cmd_ctx_from_queue(struct xnvme_queue *queue)
 }
 
 int
-xnvme_cmd_pass(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
-	       size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
+xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+	       size_t mbuf_nbytes, int opts)
 {
 	const int cmd_opts = opts & XNVME_CMD_MASK;
 
@@ -106,8 +106,9 @@ xnvme_cmd_pass(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, v
 }
 
 int
-xnvme_cmd_pass_admin(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
-		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
+xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		     size_t mbuf_nbytes,
+		     int opts)
 {
 	if (XNVME_CMD_ASYNC & opts) {
 		XNVME_DEBUG("FAILED: Admin commands are always sync.");
