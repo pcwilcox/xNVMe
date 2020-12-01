@@ -258,6 +258,11 @@ xnvme_queue_wait(struct xnvme_queue *queue);
 struct xnvme_cmd_ctx;
 
 /**
+ * Signature of function used with Command Queues for async. callback upon command-completion
+ */
+typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
+
+/**
  * Enumeration of `xnvme_cmd` options
  *
  * @enum xnvme_cmd_opts
@@ -322,11 +327,6 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 int
 xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
 		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
-
-/**
- * Signature of function used with Command Queues for async. callback upon command-completion
- */
-typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
 
 /**
  * Forward declaration, see definition further down
