@@ -291,6 +291,32 @@ struct xnvme_cmd_ctx;
 typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
 
 /**
+ * The xNVMe Command Context
+ *
+ * @struct xnvme_cmd_ctx
+ */
+struct xnvme_cmd_ctx {
+	struct xnvme_spec_cmd cmd;		///< Command to be processed
+	struct xnvme_spec_cpl cpl;		///< Completion result from processing
+
+	struct xnvme_dev *dev;
+
+	///< Fields for command option: XNVME_CMD_ASYNC
+	struct {
+		struct xnvme_queue *queue;    ///< Queue used for command processing
+		xnvme_queue_cb cb;        ///< User defined callback function
+		void *cb_arg;            ///< User defined callback function arguments
+	} async;
+
+	uint32_t opts;
+
+	uint8_t be_rsvd[4];
+
+	///< Fields for cmd_ctx-pool
+	SLIST_ENTRY(xnvme_cmd_ctx) link;
+};
+
+/**
  * Assign a callback-function and argument to be used with the ::xnvme_cmd_ctx of the queue
  *
  * @param queue The ::xnvme_queue to assign default callback function for
@@ -367,29 +393,6 @@ xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, siz
 int
 xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
 		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
-
-/**
- * The xNVMe Command Context
- *
- * @struct xnvme_cmd_ctx
- */
-struct xnvme_cmd_ctx {
-	struct xnvme_spec_cmd cmd;		///< Command to be processed
-	struct xnvme_spec_cpl cpl;		///< Completion result from processing
-
-	struct xnvme_dev *dev;
-
-	///< Fields for command option: XNVME_CMD_ASYNC
-	struct {
-		struct xnvme_queue *queue;    ///< Queue used for command processing
-		xnvme_queue_cb cb;        ///< User defined callback function
-		void *cb_arg;            ///< User defined callback function arguments
-	} async;
-
-	///< Fields for cmd_ctx-pool
-	struct xnvme_cmd_ctx_pool *pool;
-	SLIST_ENTRY(xnvme_cmd_ctx) link;
-};
 
 /**
  * Retrieve a command-context for issuing commands to the given device
