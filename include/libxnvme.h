@@ -189,7 +189,7 @@ enum xnvme_queue_opts {
 /**
  * Allocate a Command Queue for asynchronous command submission and completion
  *
- * @param dev Handle ::xnvme_dev obtained with xnvme_dev_open() / xnvme_dev_openf()
+ * @param dev Device handle (::xnvme_dev) obtained with xnvme_dev_open() / xnvme_dev_openf()
  * @param depth Maximum number of outstanding commands on the initialized queue, note that it must
  * be a power of 2 within the range [1,4096]
  * @param opts Queue options
@@ -203,7 +203,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 /**
  * Get the I/O depth of the ::xnvme_queue
  *
- * @param queue Command context
+ * @param queue Pointer to the ::xnvme_queue to query for maximum queue-depth
  *
  * @return On success, depth of the given context is returned. On error, 0 is returned e.g. errors
  * are silent
@@ -214,7 +214,7 @@ xnvme_queue_get_depth(struct xnvme_queue *queue);
 /**
  * Get the number of outstanding commands on the given ::xnvme_queue
  *
- * @param queue Command Queue
+ * @param queue Pointer to the ::xnvme_queue to query for outstanding commands
  *
  * @return On success, number of outstanding commands are returned. On error, 0 is returned e.g.
  * errors are silent
@@ -225,7 +225,7 @@ xnvme_queue_get_outstanding(struct xnvme_queue *queue);
 /**
  * Tear down the given ::xnvme_queue
  *
- * @param queue
+ * @param queue Pointer to the ::xnvme_queue to tear down
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
@@ -237,6 +237,9 @@ xnvme_queue_term(struct xnvme_queue *queue);
  *
  * Set process 'max' to limit number of completions, 0 means no max.
  *
+ * @param queue Pointer to the ::xnvme_queue to poke for completions
+ * @param max The max number of completions to complete
+ *
  * @return On success, number of completions processed, may be 0. On error, negative `errno` is
  * returned.
  */
@@ -245,6 +248,8 @@ xnvme_queue_poke(struct xnvme_queue *queue, uint32_t max);
 
 /**
  * Wait for completion of all outstanding commands in the given ::xnvme_queue
+ *
+ * @param queue Pointer to the ::xnvme_queue to wait for completions on
  *
  * @return On success, number of completions processed, may be 0. On error, negative `errno` is
  * returned.
@@ -260,7 +265,7 @@ xnvme_queue_wait(struct xnvme_queue *queue);
  *
  * @note This is not thread-safe
  *
- * @param queue Pointer to the the ::xnvme_queue to retrieve a command-context for
+ * @param queue Pointer to the ::xnvme_queue to retrieve a command-context for
  *
  * @return On success, a command-context is returned. On error, NULL is returned and `errno` is set
  * to indicate the error.
@@ -356,12 +361,20 @@ xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, 
 /**
  * Retrieve a command-context for issuing commands to the given device
  *
+ * @param dev Device handle (::xnvme_dev) obtained with xnvme_dev_open() / xnvme_dev_openf()
+ *
+ * @return A ::xnvme_cmd_ctx initialized synchronous command on the given device
  */
 struct xnvme_cmd_ctx
 xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev);
 
 /**
  * Retrieve a command-text for issuing commands to the given queue
+ *
+ * @param queue Pointer to the ::xnvme_queue to retrieve a command-context for
+ *
+ * @return On success, a pointer to a ::xnvme_cmd_ctx is returned. On error, NULL is returned and
+ * `errno` set to indicate the error.
  */
 struct xnvme_cmd_ctx *
 xnvme_cmd_ctx_from_queue(struct xnvme_queue *queue);
@@ -378,6 +391,7 @@ xnvme_cmd_ctx_clear(struct xnvme_cmd_ctx *ctx);
  * Encapsulate completion-error checking here for now.
  *
  * @todo re-think this
+ *
  * @param ctx Pointer to the ::xnvme_cmd_ctx to check status on
  *
  * @return On success, 0 is return. On error, a non-zero value is returned.
