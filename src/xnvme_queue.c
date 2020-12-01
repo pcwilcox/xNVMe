@@ -43,7 +43,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 		return -EINVAL;
 	}
 
-	queue_nbytes = sizeof(**queue) + depth * sizeof(*((*queue)->pool_storage));
+	queue_nbytes = sizeof(**queue) + (depth + 1) * sizeof(*((*queue)->pool_storage));
 
 	*queue = calloc(1, queue_nbytes);
 	if (!*queue) {
@@ -55,7 +55,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 
 	SLIST_INIT(&(*queue)->base.pool);
 
-	for (uint32_t i = 0; i < (*queue)->base.depth; ++i) {
+	for (uint32_t i = 0; i <= (*queue)->base.depth; ++i) {
 		(*queue)->pool_storage[i].dev = dev;
 		(*queue)->pool_storage[i].async.queue = *queue;
 		(*queue)->pool_storage[i].async.cb = NULL;
