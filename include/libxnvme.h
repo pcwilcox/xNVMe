@@ -431,27 +431,6 @@ xnvme_cmd_ctx_cpl_status(struct xnvme_cmd_ctx *ctx)
 	return ctx->cpl.status.sc || ctx->cpl.status.sct;
 }
 
-/**
- * Command Context
- *
- * @struct xnvme_cmd_ctx
- */
-struct xnvme_cmd_ctx_pool {
-	SLIST_HEAD(, xnvme_cmd_ctx) head;
-	uint32_t capacity;
-	struct xnvme_cmd_ctx elm[];
-};
-
-int
-xnvme_cmd_ctx_pool_alloc(struct xnvme_cmd_ctx_pool **pool, uint32_t capacity);
-
-int
-xnvme_cmd_ctx_pool_init(struct xnvme_cmd_ctx_pool *pool, struct xnvme_queue *queue,
-			xnvme_queue_cb cb, void *cb_args);
-
-void
-xnvme_cmd_ctx_pool_free(struct xnvme_cmd_ctx_pool *pool);
-
 #ifdef __cplusplus
 }
 #endif
