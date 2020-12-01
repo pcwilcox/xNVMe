@@ -218,8 +218,8 @@ _linux_iou_wait(struct xnvme_queue *queue)
 }
 
 int
-_linux_iou_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx, void *dbuf,
-		  size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int XNVME_UNUSED(opts))
+_linux_iou_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		  size_t mbuf_nbytes)
 {
 	struct xnvme_queue_iou *queue = (void *)ctx->async.queue;
 	struct xnvme_be_linux_state *state = (void *)queue->base.dev->be.state;
