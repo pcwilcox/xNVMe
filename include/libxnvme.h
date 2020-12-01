@@ -329,36 +329,6 @@ int
 xnvme_queue_set_cb(struct xnvme_queue *queue, xnvme_queue_cb cb, void *cb_arg);
 
 /**
- * Pass a NVMe IO Command through to the device via the given ::xnvme_cmd_ctx
- *
- * @param ctx Pointer to command context (::xnvme_cmd_ctx)
- * @param dbuf pointer to data-payload
- * @param dbuf_nbytes size of data-payload in bytes
- * @param mbuf pointer to meta-payload
- * @param mbuf_nbytes size of the meta-payload in bytes
- *
- * @return On success, 0 is returned. On error, negative `errno` is returned.
- */
-int
-xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
-	       size_t mbuf_nbytes);
-
-/**
- * Pass a NVMe Admin Command through to the device with minimal intervention
- *
- * @param ctx Pointer to command context (::xnvme_cmd_ctx)
- * @param dbuf pointer to data-payload
- * @param dbuf_nbytes size of data-payload in bytes
- * @param mbuf pointer to meta-payload
- * @param mbuf_nbytes size of the meta-payload in bytes
- *
- * @return On success, 0 is returned. On error, negative `errno` is returned.
- */
-int
-xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
-		     size_t mbuf_nbytes);
-
-/**
  * Retrieve a command-context for issuing commands to the given device
  *
  * @param dev Device handle (::xnvme_dev) obtained with xnvme_dev_open() / xnvme_dev_openf()
@@ -401,6 +371,36 @@ xnvme_cmd_ctx_cpl_status(struct xnvme_cmd_ctx *ctx)
 {
 	return ctx->cpl.status.sc || ctx->cpl.status.sct;
 }
+
+/**
+ * Pass a NVMe IO Command through to the device via the given ::xnvme_cmd_ctx
+ *
+ * @param ctx Pointer to command context (::xnvme_cmd_ctx)
+ * @param dbuf pointer to data-payload
+ * @param dbuf_nbytes size of data-payload in bytes
+ * @param mbuf pointer to meta-payload
+ * @param mbuf_nbytes size of the meta-payload in bytes
+ *
+ * @return On success, 0 is returned. On error, negative `errno` is returned.
+ */
+int
+xnvme_cmd_pass(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+	       size_t mbuf_nbytes);
+
+/**
+ * Pass a NVMe Admin Command through to the device with minimal intervention
+ *
+ * @param ctx Pointer to command context (::xnvme_cmd_ctx)
+ * @param dbuf pointer to data-payload
+ * @param dbuf_nbytes size of data-payload in bytes
+ * @param mbuf pointer to meta-payload
+ * @param mbuf_nbytes size of the meta-payload in bytes
+ *
+ * @return On success, 0 is returned. On error, negative `errno` is returned.
+ */
+int
+xnvme_cmd_pass_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+		     size_t mbuf_nbytes);
 
 #ifdef __cplusplus
 }
