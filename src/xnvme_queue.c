@@ -60,6 +60,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 		(*queue)->pool_storage[i].async.queue = *queue;
 		(*queue)->pool_storage[i].async.cb = NULL;
 		(*queue)->pool_storage[i].async.cb_arg = NULL;
+		(*queue)->pool_storage[i].opts = XNVME_CMD_ASYNC;
 
 		SLIST_INSERT_HEAD(&(*queue)->base.pool, &((*queue)->pool_storage[i]), link);
 	}
