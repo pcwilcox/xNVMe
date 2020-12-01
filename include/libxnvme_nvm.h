@@ -29,7 +29,8 @@ extern "C" {
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_nvm_read(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t nlb, void *dbuf, void *mbuf);
+xnvme_nvm_read(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t nlb, void *dbuf,
+	       void *mbuf);
 
 /**
  * Submit, and optionally wait for completion of, a NVMe Write
@@ -45,8 +46,7 @@ xnvme_nvm_read(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t
  */
 int
 xnvme_nvm_write(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba, uint16_t nlb,
-		const void *dbuf,
-		const void *mbuf);
+		const void *dbuf, const void *mbuf);
 
 /**
  * Submit a write uncorrected command
@@ -93,8 +93,8 @@ xnvme_nvm_write_zeroes(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t sdlba,
  */
 int
 xnvme_nvm_scopy(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t sdlba,
-		struct xnvme_spec_nvm_scopy_fmt_zero *ranges,
-		uint8_t nr, enum xnvme_nvm_scopy_fmt copy_fmt);
+		struct xnvme_spec_nvm_scopy_fmt_zero *ranges, uint8_t nr,
+		enum xnvme_nvm_scopy_fmt copy_fmt);
 
 #ifdef __cplusplus
 }
