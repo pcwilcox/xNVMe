@@ -1156,9 +1156,10 @@ static void
 cmd_sync_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct xnvme_cmd_ctx *ctx = cb_arg;
+	uint8_t *completed = &ctx->be_rsvd[0];
 
 	ctx->cpl = *(const struct xnvme_spec_cpl *)cpl;
-	ctx->async.cb_arg = (void *)cb_arg;	// Assign completion-indicator
+	*completed = 1;
 }
 
 static void
@@ -1207,20 +1208,14 @@ int
 xnvme_be_spdk_sync_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
 			  size_t XNVME_UNUSED(mbuf_nbytes))
 {
-	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(ctx->dev);
 	struct xnvme_be_spdk_state *state = (void *)ctx->dev->be.state;
 	struct spdk_nvme_qpair *qpair = state->qpair;
 	pthread_mutex_t *qpair_lock = &state->qpair_lock;
+	uint8_t *completed = &ctx->be_rsvd[0];
 
-	int err = 0;
+	int err;
 
-	if (!ctx) {			// Ensure that a ctx is available
-		ctx = &ctx_local;
-	}
-	if (ctx->async.cb_arg) {	// It is used as completion-indicator
-		XNVME_DEBUG("FAILED: sync.cmd may not provide async.cb_arg");
-		return -EINVAL;
-	}
+	*completed = 0;
 
 	pthread_mutex_lock(qpair_lock);
 	err = submit_ioc(state->ctrlr, qpair, ctx, dbuf, dbuf_nbytes, mbuf, cmd_sync_cb, ctx);
@@ -1230,12 +1225,13 @@ xnvme_be_spdk_sync_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nby
 		return err;
 	}
 
-	while (!ctx->async.cb_arg) {
+	while (!*completed) {
 		pthread_mutex_lock(qpair_lock);
 		spdk_nvme_qpair_process_completions(qpair, 0);
 		pthread_mutex_unlock(qpair_lock);
 	}
-	ctx->async.cb_arg = NULL;
+
+	*completed = 0;
 
 	if (xnvme_cmd_ctx_cpl_status(ctx)) {
 		XNVME_DEBUG("FAILED: xnvme_cmd_ctx_cpl_status()");
@@ -1248,8 +1244,8 @@ xnvme_be_spdk_sync_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nby
 // TODO: consider whether 'opts' should be used for anything here...
 static inline int
 cmd_admin_submit(struct spdk_nvme_ctrlr *ctrlr, struct xnvme_cmd_ctx *ctx, void *dbuf,
-		 uint32_t dbuf_nbytes, void *mbuf, uint32_t mbuf_nbytes,
-		 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+		 uint32_t dbuf_nbytes, void *mbuf, uint32_t mbuf_nbytes, spdk_nvme_cmd_cb cb_fn,
+		 void *cb_arg)
 {
 	ctx->cmd.common.mptr = (uint64_t)mbuf ? (uint64_t)mbuf : ctx->cmd.common.mptr;
 
@@ -1270,28 +1266,22 @@ int
 xnvme_be_spdk_sync_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
 			     size_t mbuf_nbytes)
 {
-	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(ctx->dev);
 	struct xnvme_be_spdk_state *state = (void *)ctx->dev->be.state;
+	uint8_t *completed = &ctx->be_rsvd[0];
 
-	if (!ctx) {	// Ensure that a ctx is available
-		ctx = &ctx_local;
-	}
-	// ctx.async.cb_arg is used as completion-indicator
-	if (ctx->async.cb_arg) {
-		XNVME_DEBUG("FAILED: sync.cmd may not provide async.cb_arg");
-		return -EINVAL;
-	}
+	*completed = 0;
 
-	if (cmd_admin_submit(state->ctrlr, ctx, dbuf, dbuf_nbytes, mbuf,
-			     mbuf_nbytes, cmd_sync_cb, ctx)) {
+	if (cmd_admin_submit(state->ctrlr, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, cmd_sync_cb,
+			     ctx)) {
 		XNVME_DEBUG("FAILED: cmd_admin_submit");
 		return -EIO;
 	}
 
-	while (!ctx->async.cb_arg) {	// Wait for completion-indicator
+	while (!*completed) {	// Wait for completion-indicator
 		spdk_nvme_ctrlr_process_admin_completions(state->ctrlr);
 	}
-	ctx->async.cb_arg = NULL;
+
+	*completed = 0;
 
 	// check for errors
 	if (xnvme_cmd_ctx_cpl_status(ctx)) {
