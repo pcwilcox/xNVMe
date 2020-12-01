@@ -31,8 +31,7 @@
 	( XNVME_BE_ASYNC_NBYTES + XNVME_BE_SYNC_NBYTES + XNVME_BE_DEV_NBYTES + XNVME_BE_MEM_NBYTES + XNVME_BE_ATTR_NBYTES + XNVME_BE_STATE_NBYTES )
 
 struct xnvme_be_async {
-	int (*cmd_io)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *, size_t,
-		      int);
+	int (*cmd_io)(struct xnvme_cmd_ctx *, void *, size_t, void *, size_t);
 
 	int (*poke)(struct xnvme_queue *, uint32_t);
 
@@ -55,15 +54,13 @@ struct xnvme_be_sync {
 	 * Pass a NVMe I/O Command Through to the device with minimal driver
 	 * intervention
 	 */
-	int (*cmd_io)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *, size_t,
-		      int);
+	int (*cmd_io)(struct xnvme_cmd_ctx *, void *, size_t, void *, size_t);
 
 	/**
 	 * Pass a NVMe Admin Command Through to the device with minimal driver
 	 * intervention
 	 */
-	int (*cmd_admin)(struct xnvme_dev *, struct xnvme_cmd_ctx *, void *, size_t, void *,
-			 size_t, int);
+	int (*cmd_admin)(struct xnvme_cmd_ctx *, void *, size_t, void *, size_t);
 
 	int (*supported)(struct xnvme_dev *, uint32_t);
 
