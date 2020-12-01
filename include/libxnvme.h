@@ -299,20 +299,20 @@ struct xnvme_cmd_ctx {
 	struct xnvme_spec_cmd cmd;		///< Command to be processed
 	struct xnvme_spec_cpl cpl;		///< Completion result from processing
 
-	struct xnvme_dev *dev;
+	struct xnvme_dev *dev;			///< Device associated with the command
 
 	///< Fields for command option: XNVME_CMD_ASYNC
 	struct {
-		struct xnvme_queue *queue;    ///< Queue used for command processing
-		xnvme_queue_cb cb;        ///< User defined callback function
-		void *cb_arg;            ///< User defined callback function arguments
+		struct xnvme_queue *queue;	///< Queue used for command processing
+		xnvme_queue_cb cb;		///< User defined callback function
+		void *cb_arg;			///< User defined callback function arguments
 	} async;
 
 	uint32_t opts;
 
-	uint8_t be_rsvd[4];
+	uint8_t be_rsvd[4];		///< Fields reserved for use by library internals
 
-	///< Fields for cmd_ctx-pool
+	///< Field for including command-context struct in singly-linked-lists
 	SLIST_ENTRY(xnvme_cmd_ctx) link;
 };
 
