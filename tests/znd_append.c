@@ -43,7 +43,6 @@ cmd_verify(struct xnvmec *cli)
 	uint32_t nsid = cli->args.nsid;
 	struct xnvme_spec_znd_descr zone = {0 };
 
-	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
@@ -108,7 +107,7 @@ cmd_verify(struct xnvmec *cli)
 		ctx.async.cb_arg = &cb_args;
 
 		err = xnvme_znd_append(&ctx, nsid, zone.zslba, 0, dbuf + sect * geo->lba_nbytes,
-				       NULL, cmd_opts);
+				       NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -150,7 +149,7 @@ cmd_verify(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 
 		err = xnvme_nvm_read(&ctx, nsid, zone.zslba + sect, 0,
-				     vbuf + sect * geo->lba_nbytes, NULL, XNVME_CMD_SYNC);
+                             vbuf + sect * geo->lba_nbytes, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

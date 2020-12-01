@@ -19,8 +19,6 @@ sub_sync_read(struct xnvmec *cli)
 
 	struct xnvme_spec_znd_descr zone = {0 };
 
-	int cmd_opts = XNVME_CMD_SYNC;
-
 	size_t buf_nbytes;
 	char *buf = NULL;
 	int err;
@@ -66,7 +64,7 @@ sub_sync_read(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		void *payload = buf + sect * geo->lba_nbytes;
 
-		err = xnvme_nvm_read(&ctx, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts);
+		err = xnvme_nvm_read(&ctx, nsid, zone.zslba + sect, 0, payload, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -100,8 +98,6 @@ sub_sync_write(struct xnvmec *cli)
 	uint32_t nsid = cli->args.nsid;
 
 	struct xnvme_spec_znd_descr zone = { 0 };
-
-	int cmd_opts = XNVME_CMD_SYNC;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -148,7 +144,7 @@ sub_sync_write(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		void *payload = buf + sect * geo->lba_nbytes;
 
-		err = xnvme_nvm_write(&ctx, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts);
+		err = xnvme_nvm_write(&ctx, nsid, zone.zslba + sect, 0, payload, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_cmd_append()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -174,8 +170,6 @@ sub_sync_append(struct xnvmec *cli)
 	uint32_t nsid = cli->args.nsid;
 
 	struct xnvme_spec_znd_descr zone = {0 };
-
-	int cmd_opts = XNVME_CMD_SYNC;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -222,7 +216,7 @@ sub_sync_append(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		void *payload = buf + sect * geo->lba_nbytes;
 
-		err = xnvme_znd_append(&ctx, nsid, zone.zslba, 0, payload, NULL, cmd_opts);
+		err = xnvme_znd_append(&ctx, nsid, zone.zslba, 0, payload, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_cmd_append()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

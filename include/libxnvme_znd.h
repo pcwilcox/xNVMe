@@ -56,14 +56,13 @@ xnvme_znd_dev_get_lbafe(struct xnvme_dev *dev);
  * @param partial partial request
  * @param dbuf pointer to data payload
  * @param dbuf_nbytes pointer to meta payload
- * @param opts command-options, see ::xnvme_cmd_opts
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
 xnvme_znd_mgmt_recv(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t slba,
 		    enum xnvme_spec_znd_cmd_mgmt_recv_action action, enum xnvme_spec_znd_cmd_mgmt_recv_action_sf sf,
-		    uint8_t partial, void *dbuf, uint32_t dbuf_nbytes, int opts);
+		    uint8_t partial, void *dbuf, uint32_t dbuf_nbytes);
 
 /**
  * Fills 'zdescr' with the Zone on the given 'dev' that starts at 'slba'
@@ -136,14 +135,13 @@ xnvme_znd_log_changes_from_dev(struct xnvme_dev *dev);
  * @param action Management action to perform with zone at zslba
  * @param sf the ::xnvme_spec_znd_cmd_mgmt_recv_action_sf option
  * @param dbuf For action=ZND_SEND_DESCRIPTOR provide buffer
- * @param opts command-options, see ::xnvme_cmd_opts
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
 xnvme_znd_mgmt_send(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t zslba,
 		    enum xnvme_spec_znd_cmd_mgmt_send_action action, enum xnvme_spec_znd_mgmt_send_action_sf sf,
-		    void *dbuf, int opts);
+		    void *dbuf);
 
 /**
  * Submit, and optionally wait for completion of, a Zone Append
@@ -154,14 +152,13 @@ xnvme_znd_mgmt_send(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t zslba,
  * @param nlb number of LBAs, this is zero-based value
  * @param dbuf pointer to data payload
  * @param mbuf pointer to meta payload
- * @param opts command-options, see ::xnvme_cmd_opts
  *
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
 xnvme_znd_append(struct xnvme_cmd_ctx *ctx, uint32_t nsid, uint64_t zslba, uint16_t nlb,
 		 const void *dbuf,
-		 const void *mbuf, int opts);
+		 const void *mbuf);
 
 /**
  * Encapsulation of Zone Descriptors and Zone Descriptor Extensions

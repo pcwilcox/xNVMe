@@ -197,7 +197,7 @@ _scopy_helper(struct xnvmec *cli, uint64_t tlbas)
 		size_t ofz = i * geo->lba_nbytes;
 
 		err = xnvme_nvm_write(&ctx, nsid, range->entry[i].slba, range->entry[i].nlb,
-				      dbuf + ofz, NULL, XNVME_CMD_SYNC);
+				      dbuf + ofz, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_write()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -211,7 +211,7 @@ _scopy_helper(struct xnvmec *cli, uint64_t tlbas)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		size_t ofz = i * geo->lba_nbytes;
 
-		err = xnvme_nvm_write(&ctx, nsid, sdlba + i, 0, vbuf + ofz, NULL, XNVME_CMD_SYNC);
+		err = xnvme_nvm_write(&ctx, nsid, sdlba + i, 0, vbuf + ofz, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -231,7 +231,7 @@ _scopy_helper(struct xnvmec *cli, uint64_t tlbas)
 
 		xnvmec_pinf("Using XNVME_CMD_SYNC mode");
 		err = xnvme_nvm_scopy(
-			      &ctx, nsid, sdlba, range->entry, nr, copy_fmt, XNVME_CMD_SYNC);
+			      &ctx, nsid, sdlba, range->entry, nr, copy_fmt);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_scopy()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -253,7 +253,7 @@ _scopy_helper(struct xnvmec *cli, uint64_t tlbas)
 		ctx.async.cb = cb_noop;
 
 		err = xnvme_nvm_scopy(
-			      &ctx, nsid, sdlba, range->entry, nr, copy_fmt, XNVME_CMD_ASYNC);
+			      &ctx, nsid, sdlba, range->entry, nr, copy_fmt);
 		if (err) {
 			xnvmec_perr("xnvme_nvm_scopy()", err);
 			xnvme_queue_term(queue);
@@ -272,7 +272,7 @@ _scopy_helper(struct xnvmec *cli, uint64_t tlbas)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 		size_t ofz = i * geo->lba_nbytes;
 
-		err = xnvme_nvm_read(&ctx, nsid, sdlba + i, 0, vbuf + ofz, NULL, XNVME_CMD_SYNC);
+		err = xnvme_nvm_read(&ctx, nsid, sdlba + i, 0, vbuf + ofz, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

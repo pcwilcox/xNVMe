@@ -128,7 +128,7 @@ sub_read(struct xnvmec *cli)
 	}
 
 	xnvmec_pinf("Sending the command...");
-	err = xnvme_nvm_read(&ctx, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC);
+	err = xnvme_nvm_read(&ctx, nsid, slba, nlb, dbuf, mbuf);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_nvm_read()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
@@ -205,7 +205,7 @@ sub_write(struct xnvmec *cli)
 	}
 
 	xnvmec_pinf("Sending the command...");
-	err = xnvme_nvm_write(&ctx, nsid, slba, nlb, dbuf, mbuf, XNVME_CMD_SYNC);
+	err = xnvme_nvm_write(&ctx, nsid, slba, nlb, dbuf, mbuf);
 	if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 		xnvmec_perr("xnvme_nvm_write()", err);
 		xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);

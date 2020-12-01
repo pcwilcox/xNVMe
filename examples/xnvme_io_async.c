@@ -116,7 +116,7 @@ sub_async_read(struct xnvmec *cli)
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_read(ctx, nsid, slba + sect, 0, payload, NULL, XNVME_CMD_ASYNC);
+		err = xnvme_nvm_read(ctx, nsid, slba + sect, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -257,7 +257,7 @@ sub_async_write(struct xnvmec *cli)
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_write(ctx, nsid, slba + sect, 0, payload, NULL, XNVME_CMD_ASYNC);
+		err = xnvme_nvm_write(ctx, nsid, slba + sect, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;

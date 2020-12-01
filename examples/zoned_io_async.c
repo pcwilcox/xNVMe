@@ -53,7 +53,6 @@ sub_async_read(struct xnvmec *cli)
 	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
 	struct xnvme_spec_znd_descr zone = {0 };
 
-	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
@@ -113,7 +112,7 @@ sub_async_read(struct xnvmec *cli)
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_read(ctx, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts);
+		err = xnvme_nvm_read(ctx, nsid, zone.zslba + sect, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -196,7 +195,6 @@ sub_async_write(struct xnvmec *cli)
 	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
 	struct xnvme_spec_znd_descr zone = {0 };
 
-	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
@@ -255,7 +253,7 @@ sub_async_write(struct xnvmec *cli)
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_write(ctx, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts);
+		err = xnvme_nvm_write(ctx, nsid, zone.zslba + sect, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -334,7 +332,6 @@ sub_async_append(struct xnvmec *cli)
 	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
 	struct xnvme_spec_znd_descr zone = {0 };
 
-	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
@@ -394,7 +391,7 @@ sub_async_append(struct xnvmec *cli)
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_znd_append(ctx, nsid, zone.zslba, 0, payload, NULL, cmd_opts);
+		err = xnvme_znd_append(ctx, nsid, zone.zslba, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
