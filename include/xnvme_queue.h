@@ -8,7 +8,7 @@ struct xnvme_queue_base {
 	struct xnvme_dev *dev;  ///< Device on which the queue operates
 	uint32_t depth;		///< IO depth
 	uint32_t outstanding;	///< Outstanding IO on the context/ring/queue
-	SLIST_HEAD(,xnvme_cmd_ctx) pool;
+	SLIST_HEAD(, xnvme_cmd_ctx) pool;
 };
 XNVME_STATIC_ASSERT(sizeof(struct xnvme_queue_base) == 24, "Incorrect size")
 
