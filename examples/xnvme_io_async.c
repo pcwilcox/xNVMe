@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <libxnvme.h>
+#include <libxnvme_pp.h>
 #include <libxnvme_nvm.h>
 #include <libxnvmec.h>
 #include <libxnvme_util.h>
@@ -38,16 +39,14 @@ cb_pool(struct xnvme_cmd_ctx *ctx, void *cb_arg)
 	}
 
 	xnvme_queue_put_cmd_ctx(ctx->async.queue, ctx);
-
-	//SLIST_INSERT_HEAD(&ctx->pool->head, ctx, link);
 }
 
 /**
  * This example shows how to do asynchronous reads
  *
  * - Allocate command-payload buffers
- * - Setup async. context
- * - Setup request pool
+ * - Setup a Command Queue
+ *   | Using asynchronous command-contexts
  * - Submit read commands
  * - Reap their completion
  * - Teardown
@@ -186,8 +185,8 @@ exit:
  * This example shows how to do asynchronous write
  *
  * - Allocate command-payload buffers
- * - Setup queue
- * - Setup command-context pool
+ * * - Setup a Command Queue
+ *   | Using asynchronous command-contexts
  * - Submit write commands
  * - Reap their completion
  * - Teardown
