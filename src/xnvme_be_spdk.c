@@ -1174,9 +1174,8 @@ cmd_async_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 // TODO: consider whether 'mbuf_nbytes' is needed here
 // TODO: consider whether 'opts' is needed here
 int
-xnvme_be_spdk_async_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd_ctx *ctx,
-			   void *dbuf, size_t dbuf_nbytes, void *mbuf,
-			   size_t XNVME_UNUSED(mbuf_nbytes), int XNVME_UNUSED(opts))
+xnvme_be_spdk_async_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			   size_t XNVME_UNUSED(mbuf_nbytes))
 {
 	struct xnvme_queue_spdk *queue = (void *)ctx->async.queue;
 	struct xnvme_be_spdk_state *state = (void *)queue->base.dev->be.state;
@@ -1205,12 +1204,11 @@ xnvme_be_spdk_async_cmd_io(struct xnvme_dev *XNVME_UNUSED(dev), struct xnvme_cmd
 // TODO: consider whether 'mbuf_nbytes' is needed here
 // TODO: consider whether 'opts' is needed here
 int
-xnvme_be_spdk_sync_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			  size_t dbuf_nbytes, void *mbuf, size_t XNVME_UNUSED(mbuf_nbytes),
-			  int XNVME_UNUSED(opts))
+xnvme_be_spdk_sync_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			  size_t XNVME_UNUSED(mbuf_nbytes))
 {
-	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(dev);
-	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
+	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(ctx->dev);
+	struct xnvme_be_spdk_state *state = (void *)ctx->dev->be.state;
 	struct spdk_nvme_qpair *qpair = state->qpair;
 	pthread_mutex_t *qpair_lock = &state->qpair_lock;
 
@@ -1250,7 +1248,7 @@ xnvme_be_spdk_sync_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void
 // TODO: consider whether 'opts' should be used for anything here...
 static inline int
 cmd_admin_submit(struct spdk_nvme_ctrlr *ctrlr, struct xnvme_cmd_ctx *ctx, void *dbuf,
-		 uint32_t dbuf_nbytes, void *mbuf, uint32_t mbuf_nbytes, int XNVME_UNUSED(opts),
+		 uint32_t dbuf_nbytes, void *mbuf, uint32_t mbuf_nbytes,
 		 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
 	ctx->cmd.common.mptr = (uint64_t)mbuf ? (uint64_t)mbuf : ctx->cmd.common.mptr;
@@ -1269,11 +1267,11 @@ cmd_admin_submit(struct spdk_nvme_ctrlr *ctrlr, struct xnvme_cmd_ctx *ctx, void 
 }
 
 int
-xnvme_be_spdk_sync_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts)
+xnvme_be_spdk_sync_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			     size_t mbuf_nbytes)
 {
-	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(dev);
-	struct xnvme_be_spdk_state *state = (void *)dev->be.state;
+	struct xnvme_cmd_ctx ctx_local = xnvme_cmd_ctx_from_dev(ctx->dev);
+	struct xnvme_be_spdk_state *state = (void *)ctx->dev->be.state;
 
 	if (!ctx) {	// Ensure that a ctx is available
 		ctx = &ctx_local;
@@ -1285,7 +1283,7 @@ xnvme_be_spdk_sync_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, v
 	}
 
 	if (cmd_admin_submit(state->ctrlr, ctx, dbuf, dbuf_nbytes, mbuf,
-			     mbuf_nbytes, opts, cmd_sync_cb, ctx)) {
+			     mbuf_nbytes, cmd_sync_cb, ctx)) {
 		XNVME_DEBUG("FAILED: cmd_admin_submit");
 		return -EIO;
 	}
