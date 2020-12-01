@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <libxnvme.h>
+#include <libxnvme_pp.h>
 #include <libxnvme_spec_pp.h>
 #include <libxnvme_nvm.h>
 #include <libxnvme_util.h>
@@ -19,18 +20,18 @@ struct cb_args {
 };
 
 static void
-cb_pool(struct xnvme_cmd_ctx *req, void *cb_arg)
+cb_pool(struct xnvme_cmd_ctx *ctx, void *cb_arg)
 {
 	struct cb_args *cb_args = cb_arg;
 
 	cb_args->completed += 1;
 
-	if (xnvme_cmd_ctx_cpl_status(req)) {
-		xnvme_cmd_ctx_pr(req, XNVME_PR_DEF);
+	if (xnvme_cmd_ctx_cpl_status(ctx)) {
+		xnvme_cmd_ctx_pr(ctx, XNVME_PR_DEF);
 		cb_args->ecount += 1;
 	}
 
-	SLIST_INSERT_HEAD(&req->pool->head, req, link);
+	xnvme_queue_put_cmd_ctx(ctx->async.queue, ctx);
 }
 
 /**
@@ -38,8 +39,8 @@ cb_pool(struct xnvme_cmd_ctx *req, void *cb_arg)
  * manner, it has all the boiler-plate code taking care of:
  *
  * - Command-payload buffers
- * - Context allocation
- * - Request-pool allocation
+ * - Queue setup
+ *   | Using asynchronous command-contexts
  * - As well as sending the read commands and consuming their completion
  */
 static int
@@ -55,7 +56,6 @@ sub_async_read(struct xnvmec *cli)
 	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
-	struct xnvme_cmd_ctx_pool *reqs = NULL;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -102,16 +102,7 @@ sub_async_read(struct xnvmec *cli)
 		xnvmec_perr("xnvme_queue_init()", err);
 		goto exit;
 	}
-	err = xnvme_cmd_ctx_pool_alloc(&reqs, qd + 1);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_alloc()", err);
-		goto exit;
-	}
-	err = xnvme_cmd_ctx_pool_init(reqs, queue, cb_pool, &cb_args);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_init()", err);
-		goto exit;
-	}
+	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
 	xnvmec_pinf("Read at qdepth: %u to uri: '%s'", qd, cli->args.uri);
 
@@ -119,13 +110,11 @@ sub_async_read(struct xnvmec *cli)
 
 	payload = buf;
 	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
-		struct xnvme_cmd_ctx *req = SLIST_FIRST(&reqs->head);
-
-		SLIST_REMOVE_HEAD(&reqs->head, link);
+		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_read(dev, nsid, zone.zslba + sect, 0, payload, NULL,
-				     cmd_opts, req);
+		err = xnvme_nvm_read(dev, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts,
+				     ctx);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -183,7 +172,6 @@ exit:
 			xnvmec_perr("xnvme_queue_term()", err_exit);
 		}
 	}
-	xnvme_cmd_ctx_pool_free(reqs);
 	xnvme_buf_free(dev, buf);
 
 	return err < 0 ? err : 0;
@@ -212,7 +200,6 @@ sub_async_write(struct xnvmec *cli)
 	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
-	struct xnvme_cmd_ctx_pool *reqs = NULL;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -259,29 +246,17 @@ sub_async_write(struct xnvmec *cli)
 		xnvmec_perr("xnvme_queue_init()", err);
 		goto exit;
 	}
-	err = xnvme_cmd_ctx_pool_alloc(&reqs, qd + 1);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_alloc()", err);
-		goto exit;
-	}
-	err = xnvme_cmd_ctx_pool_init(reqs, queue, cb_pool, &cb_args);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_init()", err);
-		goto exit;
-	}
+	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
 	xnvmec_pinf("Write at qdepth: %u to uri: '%s'", qd, cli->args.uri);
 	xnvmec_timer_start(cli);
 
 	payload = buf;
 	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
-		struct xnvme_cmd_ctx *req = SLIST_FIRST(&reqs->head);
-
-		SLIST_REMOVE_HEAD(&reqs->head, link);
+		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_write(dev, nsid, zone.zslba + sect, 0, payload,
-				      NULL, cmd_opts, req);
+		err = xnvme_nvm_write(dev, nsid, zone.zslba + sect, 0, payload, NULL, cmd_opts, ctx);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -336,7 +311,6 @@ exit:
 			xnvmec_perr("xnvme_queue_term()", err_exit);
 		}
 	}
-	xnvme_cmd_ctx_pool_free(reqs);
 	xnvme_buf_free(dev, buf);
 
 	return err < 0 ? err : 0;
@@ -364,7 +338,6 @@ sub_async_append(struct xnvmec *cli)
 	int cmd_opts = XNVME_CMD_ASYNC;
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
-	struct xnvme_cmd_ctx_pool *reqs = NULL;
 
 	size_t buf_nbytes;
 	char *buf = NULL;
@@ -411,16 +384,7 @@ sub_async_append(struct xnvmec *cli)
 		xnvmec_perr("xnvme_queue_init()", err);
 		goto exit;
 	}
-	err = xnvme_cmd_ctx_pool_alloc(&reqs, qd + 1);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_alloc()", err);
-		goto exit;
-	}
-	err = xnvme_cmd_ctx_pool_init(reqs, queue, cb_pool, &cb_args);
-	if (err) {
-		xnvmec_perr("xnvme_cmd_ctx_pool_init()", err);
-		goto exit;
-	}
+	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
 	xnvmec_pinf("Append at qd(%u) to uri: '%s'", qd, cli->args.uri);
 
@@ -428,13 +392,10 @@ sub_async_append(struct xnvmec *cli)
 
 	payload = buf;
 	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
-		struct xnvme_cmd_ctx *req = SLIST_FIRST(&reqs->head);
-
-		SLIST_REMOVE_HEAD(&reqs->head, link);
+		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_znd_append(dev, nsid, zone.zslba, 0, payload,
-				       NULL, cmd_opts, req);
+		err = xnvme_znd_append(dev, nsid, zone.zslba, 0, payload, NULL, cmd_opts, ctx);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -482,7 +443,6 @@ exit:
 			xnvmec_perr("xnvme_queue_term()", err_exit);
 		}
 	}
-	xnvme_cmd_ctx_pool_free(reqs);
 	xnvme_buf_free(dev, buf);
 
 	return err < 0 ? err : 0;
