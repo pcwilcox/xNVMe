@@ -5,12 +5,12 @@
 #include <xnvme_dev.h>
 
 int
-xnvme_be_linux_nvme_cmd_io(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			   size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_be_linux_nvme_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, void *mbuf,
+			   size_t mbuf_nbytes);
 
 int
-xnvme_be_linux_nvme_cmd_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf,
-			      size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
+xnvme_be_linux_nvme_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
+			      void *mbuf, size_t mbuf_nbytes);
 
 int
 xnvme_be_linux_nvme_dev_nsid(struct xnvme_dev *dev);
