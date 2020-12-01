@@ -75,6 +75,17 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 }
 
 int
+xnvme_queue_set_cb(struct xnvme_queue *queue, xnvme_queue_cb cb, void *cb_arg)
+{
+	for (uint32_t i = 0; i <= queue->base.depth; ++i) {
+		queue->pool_storage[i].async.cb = cb;
+		queue->pool_storage[i].async.cb_arg = cb_arg;
+	}
+
+	return 0;
+}
+
+int
 xnvme_queue_poke(struct xnvme_queue *queue, uint32_t max)
 {
 	if (!queue->base.outstanding) {

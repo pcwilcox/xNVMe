@@ -291,6 +291,18 @@ struct xnvme_cmd_ctx;
 typedef void (*xnvme_queue_cb)(struct xnvme_cmd_ctx *ctx, void *opaque);
 
 /**
+ * Assign a callback-function and argument to be used with the ::xnvme_cmd_ctx of the queue
+ *
+ * @param queue The ::xnvme_queue to assign default callback function for
+ * @param cb The callback function to use
+ * @param cb_arg The callback argument to use
+ *
+ * @return On success, 0 is returned. On error, negative `errno` is returned.
+ */
+int
+xnvme_queue_set_cb(struct xnvme_queue *queue, xnvme_queue_cb cb, void *cb_arg);
+
+/**
  * Enumeration of `xnvme_cmd` options
  *
  * @enum xnvme_cmd_opts
