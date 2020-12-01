@@ -369,11 +369,6 @@ xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbu
 		     size_t dbuf_nbytes, void *mbuf, size_t mbuf_nbytes, int opts);
 
 /**
- * Forward declaration, see definition further down
- */
-struct xnvme_cmd_ctx_pool;
-
-/**
  * The xNVMe Command Context
  *
  * @struct xnvme_cmd_ctx
