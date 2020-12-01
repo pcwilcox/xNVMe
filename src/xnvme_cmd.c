@@ -108,6 +108,20 @@ xnvme_cmd_ctx_clear(struct xnvme_cmd_ctx *ctx)
 	memset(ctx, 0x0, sizeof(*ctx));
 }
 
+struct xnvme_cmd_ctx
+xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev)
+{
+	struct xnvme_cmd_ctx ctx = { .dev = dev, .opts = XNVME_CMD_SYNC };
+
+	return ctx;
+}
+
+struct xnvme_cmd_ctx *
+xnvme_cmd_ctx_from_queue(struct xnvme_queue *queue)
+{
+	return xnvme_queue_get_cmd_ctx(queue);
+}
+
 int
 xnvme_cmd_pass(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes,
 	       void *mbuf, size_t mbuf_nbytes, int opts)
@@ -146,18 +160,4 @@ xnvme_cmd_pass_admin(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbu
 	}
 
 	return dev->be.sync.cmd_admin(dev, ctx, dbuf, dbuf_nbytes, mbuf, mbuf_nbytes, opts);
-}
-
-struct xnvme_cmd_ctx
-xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev)
-{
-	struct xnvme_cmd_ctx ctx = { .dev = dev };
-
-	return ctx;
-}
-
-struct xnvme_cmd_ctx *
-xnvme_cmd_ctx_from_queue(struct xnvme_queue *XNVME_UNUSED(queue))
-{
-	return NULL;
 }
