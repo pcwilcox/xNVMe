@@ -157,8 +157,7 @@ int
 xnvme_be_factory(const char *uri, struct xnvme_dev **dev);
 
 int
-xnvme_be_yaml(FILE *stream, const struct xnvme_be *be, int indent,
-	      const char *sep, int head);
+xnvme_be_yaml(FILE *stream, const struct xnvme_be *be, int indent, const char *sep, int head);
 
 int
 xnvme_be_fpr(FILE *stream, const struct xnvme_be *be, enum xnvme_pr opts);
