@@ -149,7 +149,7 @@ cmd_verify(struct xnvmec *cli)
 		struct xnvme_cmd_ctx ctx = xnvme_cmd_ctx_from_dev(dev);
 
 		err = xnvme_nvm_read(&ctx, nsid, zone.zslba + sect, 0,
-                             vbuf + sect * geo->lba_nbytes, NULL);
+				     vbuf + sect * geo->lba_nbytes, NULL);
 		if (err || xnvme_cmd_ctx_cpl_status(&ctx)) {
 			xnvmec_perr("xnvme_nvm_read()", err);
 			xnvme_cmd_ctx_pr(&ctx, XNVME_PR_DEF);
