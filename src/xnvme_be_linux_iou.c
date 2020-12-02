@@ -106,7 +106,7 @@ _linux_iou_init(struct xnvme_queue *q, int opts)
 		iou_flags |= IORING_SETUP_IOPOLL;
 	}
 
-	err = io_uring_queue_init(queue->base.depth, &queue->ring, iou_flags);
+	err = io_uring_queue_init(queue->base.capacity, &queue->ring, iou_flags);
 	if (err) {
 		XNVME_DEBUG("FAILED: io_uring_queue_init(), err: %d", err);
 		return err;
@@ -229,7 +229,7 @@ _linux_iou_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, voi
 	int opcode = IORING_OP_NOP;
 	int err = 0;
 
-	if (queue->base.outstanding == queue->base.depth) {
+	if (queue->base.outstanding == queue->base.capacity) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}

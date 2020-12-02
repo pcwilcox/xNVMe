@@ -30,7 +30,7 @@ xnvme_queue_term(struct xnvme_queue *queue)
 }
 
 int
-xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_queue **queue)
+xnvme_queue_init(struct xnvme_dev *dev, uint16_t capacity, int opts, struct xnvme_queue **queue)
 {
 	size_t queue_nbytes;
 	int err;
@@ -39,24 +39,24 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 		XNVME_DEBUG("FAILED: !dev");
 		return -EINVAL;
 	}
-	if (!(xnvme_is_pow2(depth) && (depth < 4096))) {
-		XNVME_DEBUG("EINVAL: depth: %u", depth);
+	if (!(xnvme_is_pow2(capacity) && (capacity < 4096))) {
+		XNVME_DEBUG("EINVAL: capacity: %u", capacity);
 		return -EINVAL;
 	}
 
-	queue_nbytes = sizeof(**queue) + (depth + 1) * sizeof(*((*queue)->pool_storage));
+	queue_nbytes = sizeof(**queue) + (capacity + 1) * sizeof(*((*queue)->pool_storage));
 
 	*queue = calloc(1, queue_nbytes);
 	if (!*queue) {
 		XNVME_DEBUG("FAILED: calloc(queue), err: %s", strerror(errno));
 		return -errno;
 	}
-	(*queue)->base.depth = depth;
+	(*queue)->base.capacity = capacity;
 	(*queue)->base.dev = dev;
 
 	SLIST_INIT(&(*queue)->base.pool);
 
-	for (uint32_t i = 0; i <= (*queue)->base.depth; ++i) {
+	for (uint32_t i = 0; i <= (*queue)->base.capacity; ++i) {
 		(*queue)->pool_storage[i].dev = dev;
 		(*queue)->pool_storage[i].async.queue = *queue;
 		(*queue)->pool_storage[i].async.cb = NULL;
@@ -79,7 +79,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
 int
 xnvme_queue_set_cb(struct xnvme_queue *queue, xnvme_queue_cb cb, void *cb_arg)
 {
-	for (uint32_t i = 0; i <= queue->base.depth; ++i) {
+	for (uint32_t i = 0; i <= queue->base.capacity; ++i) {
 		queue->pool_storage[i].async.cb = cb;
 		queue->pool_storage[i].async.cb_arg = cb_arg;
 	}
@@ -104,9 +104,9 @@ xnvme_queue_wait(struct xnvme_queue *queue)
 }
 
 uint32_t
-xnvme_queue_get_depth(struct xnvme_queue *queue)
+xnvme_queue_get_capacity(struct xnvme_queue *queue)
 {
-	return queue->base.depth;
+	return queue->base.capacity;
 }
 
 uint32_t

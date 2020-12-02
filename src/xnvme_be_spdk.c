@@ -1085,7 +1085,7 @@ xnvme_be_spdk_queue_init(struct xnvme_queue *q, int XNVME_UNUSED(opts))
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(state->ctrlr, &qopts, sizeof(qopts));
 
-	qopts.io_queue_size = XNVME_MAX(queue->base.depth, qopts.io_queue_size);
+	qopts.io_queue_size = XNVME_MAX(queue->base.capacity, qopts.io_queue_size);
 	qopts.io_queue_requests = qopts.io_queue_size * 2;
 
 	queue->qpair = spdk_nvme_ctrlr_alloc_io_qpair(state->ctrlr, &qopts, sizeof(qopts));
@@ -1185,7 +1185,7 @@ xnvme_be_spdk_async_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nb
 	// TODO: do something with mbuf?
 
 	// Early exit when queue is full
-	if (queue->base.outstanding == queue->base.depth) {
+	if (queue->base.outstanding == queue->base.capacity) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}

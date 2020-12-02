@@ -410,7 +410,7 @@ xnvme_lba_prn
 xnvme_queue_get_depth
 ---------------------
 
-.. doxygenfunction:: xnvme_queue_get_depth
+.. doxygenfunction:: xnvme_queue_get_capacity
 
 
 .. _sec-c-api-xnvme-func-xnvme_queue_get_outstanding:

@@ -190,7 +190,7 @@ enum xnvme_queue_opts {
  * Allocate a Command Queue for asynchronous command submission and completion
  *
  * @param dev Device handle (::xnvme_dev) obtained with xnvme_dev_open() / xnvme_dev_openf()
- * @param depth Maximum number of outstanding commands on the initialized queue, note that it must
+ * @param capacity Maximum number of outstanding commands on the initialized queue, note that it must
  * be a power of 2 within the range [1,4096]
  * @param opts Queue options
  * @param queue Pointer-pointer to the ::xnvme_queue to initialize
@@ -198,7 +198,7 @@ enum xnvme_queue_opts {
  * @return On success, 0 is returned. On error, negative `errno` is returned.
  */
 int
-xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_queue **queue);
+xnvme_queue_init(struct xnvme_dev *dev, uint16_t capacity, int opts, struct xnvme_queue **queue);
 
 /**
  * Get the I/O depth of the ::xnvme_queue
@@ -209,7 +209,7 @@ xnvme_queue_init(struct xnvme_dev *dev, uint16_t depth, int opts, struct xnvme_q
  * are silent
  */
 uint32_t
-xnvme_queue_get_depth(struct xnvme_queue *queue);
+xnvme_queue_get_capacity(struct xnvme_queue *queue);
 
 /**
  * Get the number of outstanding commands on the given ::xnvme_queue

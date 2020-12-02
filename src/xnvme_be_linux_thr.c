@@ -90,7 +90,7 @@ _linux_thr_init(struct xnvme_queue *q, int XNVME_UNUSED(opts))
 {
 	struct xnvme_queue_thr *queue = (void *)q;
 
-	if (_qp_alloc(&(queue->qp), queue->base.depth)) {
+	if (_qp_alloc(&(queue->qp), queue->base.capacity)) {
 		XNVME_DEBUG("FAILED: _qp_alloc()");
 		goto failed;
 	}
@@ -177,7 +177,7 @@ _linux_thr_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, voi
 	struct _qp *qp = queue->qp;
 	struct _entry *entry;
 
-	if (queue->base.outstanding == queue->base.depth) {
+	if (queue->base.outstanding == queue->base.capacity) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}

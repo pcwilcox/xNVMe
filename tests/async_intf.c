@@ -57,7 +57,7 @@ test_init_term(struct xnvmec *cli)
 		}
 	}
 
-	// Initialize and check depth of asynchronous contexts
+	// Initialize and check capacity of asynchronous contexts
 	for (uint64_t qn = 0; qn < count; ++qn) {
 		err = xnvme_queue_init(dev, qd, 0, &queue[qn]);
 		if (err) {
@@ -72,8 +72,8 @@ test_init_term(struct xnvmec *cli)
 			continue;
 		}
 
-		if (xnvme_queue_get_depth(queue[qn]) != qd) {
-			XNVME_DEBUG("FAILED: xnvme_queue_get_depth() != qd(%zu)",
+		if (xnvme_queue_get_capacity(queue[qn]) != qd) {
+			XNVME_DEBUG("FAILED: xnvme_queue_get_capacity() != qd(%zu)",
 				    qd);
 			err = -EIO;
 			goto exit;

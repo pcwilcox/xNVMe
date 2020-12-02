@@ -52,7 +52,7 @@ _linux_aio_init(struct xnvme_queue *q, int XNVME_UNUSED(opts))
 	int err = 0;
 
 	queue->aio_ctx = 0;
-	queue->entries = queue->base.depth;
+	queue->entries = queue->base.capacity;
 	queue->aio_events = calloc(queue->entries, sizeof(struct io_event));
 	queue->iocbs = calloc(queue->entries, sizeof(struct iocb *));
 
@@ -167,11 +167,11 @@ _linux_aio_cmd_io(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes, voi
 		return -ENOSYS;
 	}
 
-	if (queue->base.outstanding < queue->base.depth) {
+	if (queue->base.outstanding < queue->base.capacity) {
 		queue->queued++;
 	}
 
-	if (queue->base.outstanding == queue->base.depth) {
+	if (queue->base.outstanding == queue->base.capacity) {
 		XNVME_DEBUG("FAILED: queue is full");
 		return -EBUSY;
 	}
