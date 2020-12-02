@@ -1,3 +1,11 @@
+.. _sec-getting-started:
+
+=================
+ Getting Started
+=================
+
+jazz...
+
 .. _sec-building:
 
 ============================
@@ -17,37 +25,6 @@ different Linux distributions and on FreeBSD.
 
 There you will also find notes on customizing the toolchain and
 cross-compilation.
-
-.. _sec-building-config:
-
-Configuration
-=============
-
-A ``configure`` script is provided to configure the build of **xNVMe**. You can
-inspect configuration options by invoking::
-
-  ./configure --help
-
-* Boolean options are enabled by prefixing ``--enable-<OPTION>``
-* Boolean options are disabled by prefixing ``--disable-<OPTION>``
-* A couple of examples:
-
-  - Enable debug with: ``--enable-debug``
-
-  - Disable the SPDK backend with: ``--disable-be-spdk``
-
-The configure-script will enable backends relevant to the system
-platform determined by the environment variable ``OSTYPE``.
-
-On Linux, the configure script enables the backends ``be:lioc``, ``be:liou``,
-and ``be:spdk``.
-On FreeBSD, the configure script enables the backends ``be:fioc`` and
-``be:spdk``.
-
-**xNVMe** provides third-party libraries via submodules, it builds these and
-embeds them in the **xNVMe** static libraries and executables. If you want to
-link with your version of these libraries then you can overwrite the respective
-include and library paths. See ``./configure --help`` for details.
 
 .. _sec-building-toolchain:
 
@@ -216,22 +193,93 @@ For example, from the root of the **xNVMe** source repository, do:
    :language: bash
    :lines: 8-
 
+Build Errors
+============
+
+If you are getting errors while attempting to configure and build **xNVMe**
+then it is likely due to one of the following:
+
+**git submodules**
+
+* You did not clone with ``--recursive`` or are for other reasons missing the
+  submodules. Either clone again with the ``--recursive`` flag, or update
+  submodules: ``git submodule update --init --recursive``.
+
+* You cannot use submodules, due to missing/restricted networking. In case
+  then use the source-archive provide with the latest release of **xNVMe** on
+  the GitHUB release page. Do **not** use the "Download Source" since this will
+  not contain the third-party repositories.
+
+**missing dependencies / toolchain**
+
+* You are missing dependencies, see the :ref:`sec-building-toolchain` for
+  installing these on FreeBSD and a handful of different Linux Distributions
+* You have now installed dependencies but are stil
+dependencies,
+
 Known Build Issues
-~~~~~~~~~~~~~~~~~~
+------------------
 
-There are a couple of known issues when building **xNVMe** on Alpine Linux,
-these are due to issues with the musl standard library which is not entirely
-compatible with **GLIBC** / **BSD**.
+If the above did not sort out your build-issues, then you might be facing one
+of the following known build-issues. If these do not apply to you, then please
+post an issue on GitHUB describing your build environment and output from the
+failed build.
 
-When building on Alpine with ``./configure --enable-be-spdk``, currently fails
-with due to re-definition of ``STAILQ_*`` macros.
+When building **xNVMe** on **Alpine Linux** you might encounter some issues due
+to musl standard library not being entirely compatible with **GLIBC** /
+**BSD**.
 
-And, enabling **be:liou**, ``./configure --enable-be-liou``, currently fails
-with due to missing definition in **musl**, leading to this::
+The SPDK backend does not build on due to re-definition of ``STAILQ_*``
+macros. As a work-around, then disable the SPDK backend::
+
+  ./configure --disable-be-spdk
+
+The Linux backend support for ``io_uring`` fails on **Alpine Linux** due to a
+missing definition in **musl** leading to this error message::
 
   include/liburing.h:195:17: error: unknown type name 'loff_t'; did you mean
   'off_t'?
 
+As a work-around, then disable ``io_uring`` support::
+
+  ./configure --disable-be-linux-iou
+
+See more details on changing the default build-configuration of **xNVMe** in
+the section :ref:`sec-building-config`.
+
+.. _sec-building-config:
+
+Custom Configuration
+====================
+
+A ``configure`` script is provided to configure the build of **xNVMe**. You can
+inspect configuration options by invoking::
+
+  ./configure --help
+
+* Boolean options are enabled by prefixing ``--enable-<OPTION>``
+* Boolean options are disabled by prefixing ``--disable-<OPTION>``
+* A couple of examples:
+
+  - Enable debug with: ``--enable-debug``
+
+  - Disable the SPDK backend with: ``--disable-be-spdk``
+
+The configure-script will enable backends relevant to the system
+platform determined by the environment variable ``OSTYPE``.
+
+On Linux, the configure script enables the SPDK backend ``be:spdk`` and the
+Linux native backend ``be:linux``, with all features enabled, that is, support
+for ``libaio``, ``io_uring``, ``nil-io``, and ``thr-io``.
+
+On FreeBSD, the configure script enables the SPDK backend ``be:spdk`` and the
+FreeBSD native backend ``be:fbsd``. For more information about these so-called
+library backends, see the :ref:`sec-backends` section.
+
+**xNVMe** provides third-party libraries via submodules, it builds these and
+embeds them in the **xNVMe** static libraries and executables. If you want to
+link with your version of these libraries then you can overwrite the respective
+include and library paths. See ``./configure --help`` for details.
 
 .. _sec-building-custom:
 
