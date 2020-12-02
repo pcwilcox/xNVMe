@@ -35,35 +35,37 @@ cb_pool(struct xnvme_cmd_ctx *ctx, void *cb_arg)
 }
 
 /**
- * This function provides an example of reading a Zone in an asynchronous
- * manner, it has all the boiler-plate code taking care of:
+ * This example shows how to read a entire Zone using asynchronous read commands
  *
- * - Command-payload buffers
- * - Queue setup
+ * - Allocate buffers for Command Payload
+ * - Retrieve a zone-descriptor
+ * - Setup a Command Queue
+ *   | Callback functions and callback arguments
  *   | Using asynchronous command-contexts
- * - As well as sending the read commands and consuming their completion
+ * - Submit read commands to read a range of LBAs continously
+ *   | Re-submission when busy, reap completion, waiting till empty
+ * - Dumping buffers to file
+ * - Reporting on IO-errors
+ * - Teardown
  */
 static int
 sub_async_read(struct xnvmec *cli)
 {
 	struct xnvme_dev *dev = cli->args.dev;
 	const struct xnvme_geo *geo = cli->args.geo;
-	uint32_t nsid = cli->args.nsid;
-
-	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
-	struct xnvme_spec_znd_descr zone = {0 };
+	struct xnvme_spec_znd_descr zone = { 0 };
+	uint32_t nsid, qd;
 
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
+	char *buf = NULL, *payload = NULL;
 	size_t buf_nbytes;
-	char *buf = NULL;
-	char *payload = NULL;
 	int err;
 
-	if (!cli->given[XNVMEC_OPT_NSID]) {
-		nsid = xnvme_dev_get_nsid(cli->args.dev);
-	}
+	qd = cli->given[XNVMEC_OPT_QDEPTH] ? cli->args.qdepth : DEFAULT_QD;
+	nsid = cli->given[XNVMEC_OPT_NSID] ? cli->args.nsid : xnvme_dev_get_nsid(cli->args.dev);
+
 	if (cli->given[XNVMEC_OPT_SLBA]) {
 		err = xnvme_znd_descr_from_dev(dev, cli->args.slba, &zone);
 		if (err) {
@@ -77,8 +79,6 @@ sub_async_read(struct xnvmec *cli)
 			goto exit;
 		}
 	}
-	xnvmec_pinf("Using the following zone:");
-	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
 
 	buf_nbytes = zone.zcap * geo->lba_nbytes;
 
@@ -95,7 +95,7 @@ sub_async_read(struct xnvmec *cli)
 		goto exit;
 	}
 
-	xnvmec_pinf("Initializing async. context + alloc/init requests");
+	xnvmec_pinf("Initializing queue and setting default callback function and arguments");
 	err = xnvme_queue_init(dev, qd, 0, &queue);
 	if (err) {
 		xnvmec_perr("xnvme_queue_init()", err);
@@ -103,16 +103,17 @@ sub_async_read(struct xnvmec *cli)
 	}
 	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
-	xnvmec_pinf("Read at qdepth: %u to uri: '%s'", qd, cli->args.uri);
+	xnvmec_pinf("Read uri: '%s', qd: %d", cli->args.uri, qd);
+	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
 
 	xnvmec_timer_start(cli);
 
 	payload = buf;
-	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
+	for (uint64_t curs = 0; (curs < zone.zcap) && !cb_args.ecount;) {
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_read(ctx, nsid, zone.zslba + sect, 0, payload, NULL);
+		err = xnvme_nvm_read(ctx, nsid, zone.zslba + curs, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -129,7 +130,7 @@ submit:
 		}
 
 next:
-		++sect;
+		++curs;
 		payload += geo->lba_nbytes;
 	}
 
@@ -150,10 +151,8 @@ next:
 	xnvmec_timer_bw_pr(cli, "Wall-clock", zone.zcap * geo->lba_nbytes);
 
 	if (cli->args.data_output) {
-		xnvmec_pinf("Dumping nbytes: %zu, to: '%s'",
-			    buf_nbytes, cli->args.data_output);
-		err = xnvmec_buf_to_file(buf, buf_nbytes,
-					 cli->args.data_output);
+		xnvmec_pinf("Dumping nbytes: %zu, to: '%s'", buf_nbytes, cli->args.data_output);
+		err = xnvmec_buf_to_file(buf, buf_nbytes, cli->args.data_output);
 		if (err) {
 			xnvmec_perr("xnvmec_buf_to_file()", err);
 		}
@@ -161,8 +160,7 @@ next:
 
 exit:
 	xnvmec_pinf("cb_args: {submitted: %u, completed: %u, ecount: %u}",
-		    cb_args.submitted, cb_args.completed,
-		    cb_args.ecount);
+		    cb_args.submitted, cb_args.completed, cb_args.ecount);
 
 	if (queue) {
 		int err_exit = xnvme_queue_term(queue);
@@ -176,36 +174,36 @@ exit:
 }
 
 /**
- * This function provides an example of writing a Zone in an asynchronous
- * manner, it has all the boiler-plate code taking care of:
+ * This example shows how to write a entire Zone using asynchronous write commands
  *
- * - Command-payload buffers
- * - Context allocation
- * - Request-pool allocation
- * - As well as sending the write commands and consuming their completion,
- *   specifically writing under the sequential-ordering contraint of a Zone
+ * - Allocate buffers for Command Payload
+ * - Retrieve a zone-descriptor
+ * - Setup a Command Queue
+ *   | Callback functions and callback arguments
+ *   | Using asynchronous command-contexts
+ * - Submit write commands to fill up a zone contiguously under the zone io-constraints
+ *   | Re-submission when busy, reap completion, waiting till empty
+ * - Reporting on IO-errors
+ * - Teardown
  */
 static int
 sub_async_write(struct xnvmec *cli)
 {
 	struct xnvme_dev *dev = cli->args.dev;
 	const struct xnvme_geo *geo = cli->args.geo;
-	uint32_t nsid = cli->args.nsid;
-
-	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
-	struct xnvme_spec_znd_descr zone = {0 };
+	struct xnvme_spec_znd_descr zone = { 0 };
+	uint32_t nsid, qd;
 
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
+	char *buf = NULL, *payload = NULL;
 	size_t buf_nbytes;
-	char *buf = NULL;
-	char *payload = NULL;
 	int err;
 
-	if (!cli->given[XNVMEC_OPT_NSID]) {
-		nsid = xnvme_dev_get_nsid(cli->args.dev);
-	}
+	qd = cli->given[XNVMEC_OPT_QDEPTH] ? cli->args.qdepth : DEFAULT_QD;
+	nsid = cli->given[XNVMEC_OPT_NSID] ? cli->args.nsid : xnvme_dev_get_nsid(cli->args.dev);
+
 	if (cli->given[XNVMEC_OPT_SLBA]) {
 		err = xnvme_znd_descr_from_dev(dev, cli->args.slba, &zone);
 		if (err) {
@@ -219,8 +217,6 @@ sub_async_write(struct xnvmec *cli)
 			goto exit;
 		}
 	}
-	xnvmec_pinf("Using the following zone:");
-	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
 
 	buf_nbytes = zone.zcap * geo->lba_nbytes;
 
@@ -245,15 +241,17 @@ sub_async_write(struct xnvmec *cli)
 	}
 	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
-	xnvmec_pinf("Write at qdepth: %u to uri: '%s'", qd, cli->args.uri);
+	xnvmec_pinf("Writed uri: '%s', qd: %d", cli->args.uri, qd);
+	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
+
 	xnvmec_timer_start(cli);
 
 	payload = buf;
-	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
+	for (uint64_t curs = 0; (curs < zone.zcap) && !cb_args.ecount;) {
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
-		err = xnvme_nvm_write(ctx, nsid, zone.zslba + sect, 0, payload, NULL);
+		err = xnvme_nvm_write(ctx, nsid, zone.zslba + curs, 0, payload, NULL);
 		switch (err) {
 		case 0:
 			cb_args.submitted += 1;
@@ -277,7 +275,7 @@ next:
 			goto exit;
 		}
 
-		++sect;
+		++curs;
 		payload += geo->lba_nbytes;
 	}
 
@@ -327,22 +325,19 @@ sub_async_append(struct xnvmec *cli)
 {
 	struct xnvme_dev *dev = cli->args.dev;
 	const struct xnvme_geo *geo = cli->args.geo;
-	uint32_t nsid = cli->args.nsid;
-
-	const uint32_t qd = cli->args.qdepth ? cli->args.qdepth : DEFAULT_QD;
-	struct xnvme_spec_znd_descr zone = {0 };
+	struct xnvme_spec_znd_descr zone = { 0 };
+	uint32_t nsid, qd;
 
 	struct cb_args cb_args = { 0 };
 	struct xnvme_queue *queue = NULL;
 
+	char *buf = NULL, *payload = NULL;
 	size_t buf_nbytes;
-	char *buf = NULL;
-	char *payload = NULL;
 	int err;
 
-	if (!cli->given[XNVMEC_OPT_NSID]) {
-		nsid = xnvme_dev_get_nsid(cli->args.dev);
-	}
+	qd = cli->given[XNVMEC_OPT_QDEPTH] ? cli->args.qdepth : DEFAULT_QD;
+	nsid = cli->given[XNVMEC_OPT_NSID] ? cli->args.nsid : xnvme_dev_get_nsid(cli->args.dev);
+
 	if (cli->given[XNVMEC_OPT_SLBA]) {
 		err = xnvme_znd_descr_from_dev(dev, cli->args.slba, &zone);
 		if (err) {
@@ -356,8 +351,6 @@ sub_async_append(struct xnvmec *cli)
 			goto exit;
 		}
 	}
-	xnvmec_pinf("Using the following zone:");
-	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
 
 	buf_nbytes = zone.zcap * geo->lba_nbytes;
 
@@ -382,12 +375,13 @@ sub_async_append(struct xnvmec *cli)
 	}
 	xnvme_queue_set_cb(queue, cb_pool, &cb_args);
 
-	xnvmec_pinf("Append at qd(%u) to uri: '%s'", qd, cli->args.uri);
+	xnvmec_pinf("Append uri: '%s', qd: %d", cli->args.uri, qd);
+	xnvme_spec_znd_descr_pr(&zone, XNVME_PR_DEF);
 
 	xnvmec_timer_start(cli);
 
 	payload = buf;
-	for (uint64_t sect = 0; (sect < zone.zcap) && !cb_args.ecount;) {
+	for (uint64_t curs = 0; (curs < zone.zcap) && !cb_args.ecount;) {
 		struct xnvme_cmd_ctx *ctx = xnvme_queue_get_cmd_ctx(queue);
 
 submit:
@@ -408,7 +402,7 @@ submit:
 		}
 
 next:
-		++sect;
+		++curs;
 		payload += geo->lba_nbytes;
 	}
 
@@ -430,8 +424,7 @@ next:
 
 exit:
 	xnvmec_pinf("cb_args: {submitted: %u, completed: %u, ecount: %u}",
-		    cb_args.submitted, cb_args.completed,
-		    cb_args.ecount);
+		    cb_args.submitted, cb_args.completed, cb_args.ecount);
 
 	if (queue) {
 		int err_exit = xnvme_queue_term(queue);
