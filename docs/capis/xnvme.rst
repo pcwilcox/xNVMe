@@ -17,14 +17,6 @@ Enums
 =====
 
 
-.. _sec-c-api-xnvme-enum-xnvme_cmd_opts:
-
-xnvme_cmd_opts
---------------
-
-.. doxygenenum:: xnvme_cmd_opts
-
-
 .. _sec-c-api-xnvme-enum-xnvme_pr:
 
 xnvme_pr
@@ -74,16 +66,6 @@ xnvme_cmd_ctx
 -------------
 
 .. doxygenstruct:: xnvme_cmd_ctx
-   :members:
-   :undoc-members:
-
-
-.. _sec-c-api-xnvme-struct-xnvme_cmd_ctx_pool:
-
-xnvme_cmd_ctx_pool
-------------------
-
-.. doxygenstruct:: xnvme_cmd_ctx_pool
    :members:
    :undoc-members:
 
@@ -253,28 +235,20 @@ xnvme_cmd_ctx_cpl_status
 .. doxygenfunction:: xnvme_cmd_ctx_cpl_status
 
 
-.. _sec-c-api-xnvme-func-xnvme_cmd_ctx_pool_alloc:
+.. _sec-c-api-xnvme-func-xnvme_cmd_ctx_from_dev:
 
-xnvme_cmd_ctx_pool_alloc
+xnvme_cmd_ctx_from_dev
+----------------------
+
+.. doxygenfunction:: xnvme_cmd_ctx_from_dev
+
+
+.. _sec-c-api-xnvme-func-xnvme_cmd_ctx_from_queue:
+
+xnvme_cmd_ctx_from_queue
 ------------------------
 
-.. doxygenfunction:: xnvme_cmd_ctx_pool_alloc
-
-
-.. _sec-c-api-xnvme-func-xnvme_cmd_ctx_pool_free:
-
-xnvme_cmd_ctx_pool_free
------------------------
-
-.. doxygenfunction:: xnvme_cmd_ctx_pool_free
-
-
-.. _sec-c-api-xnvme-func-xnvme_cmd_ctx_pool_init:
-
-xnvme_cmd_ctx_pool_init
------------------------
-
-.. doxygenfunction:: xnvme_cmd_ctx_pool_init
+.. doxygenfunction:: xnvme_cmd_ctx_from_queue
 
 
 .. _sec-c-api-xnvme-func-xnvme_cmd_ctx_pr:
@@ -405,6 +379,14 @@ xnvme_lba_prn
 .. doxygenfunction:: xnvme_lba_prn
 
 
+.. _sec-c-api-xnvme-func-xnvme_queue_get_cmd_ctx:
+
+xnvme_queue_get_cmd_ctx
+-----------------------
+
+.. doxygenfunction:: xnvme_queue_get_cmd_ctx
+
+
 .. _sec-c-api-xnvme-func-xnvme_queue_get_depth:
 
 xnvme_queue_get_depth
@@ -435,6 +417,22 @@ xnvme_queue_poke
 ----------------
 
 .. doxygenfunction:: xnvme_queue_poke
+
+
+.. _sec-c-api-xnvme-func-xnvme_queue_put_cmd_ctx:
+
+xnvme_queue_put_cmd_ctx
+-----------------------
+
+.. doxygenfunction:: xnvme_queue_put_cmd_ctx
+
+
+.. _sec-c-api-xnvme-func-xnvme_queue_set_cb:
+
+xnvme_queue_set_cb
+------------------
+
+.. doxygenfunction:: xnvme_queue_set_cb
 
 
 .. _sec-c-api-xnvme-func-xnvme_queue_term:
