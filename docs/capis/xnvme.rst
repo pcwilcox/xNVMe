@@ -90,6 +90,16 @@ xnvme_ident
    :undoc-members:
 
 
+.. _sec-c-api-xnvme-struct-xnvme_lba_range:
+
+xnvme_lba_range
+---------------
+
+.. doxygenstruct:: xnvme_lba_range
+   :members:
+   :undoc-members:
+
+
 .. _sec-c-api-xnvme-struct-xnvme_timer:
 
 xnvme_timer
@@ -379,20 +389,68 @@ xnvme_lba_prn
 .. doxygenfunction:: xnvme_lba_prn
 
 
+.. _sec-c-api-xnvme-func-xnvme_lba_range_fpr:
+
+xnvme_lba_range_fpr
+-------------------
+
+.. doxygenfunction:: xnvme_lba_range_fpr
+
+
+.. _sec-c-api-xnvme-func-xnvme_lba_range_from_offset_nbytes:
+
+xnvme_lba_range_from_offset_nbytes
+----------------------------------
+
+.. doxygenfunction:: xnvme_lba_range_from_offset_nbytes
+
+
+.. _sec-c-api-xnvme-func-xnvme_lba_range_from_slba_elba:
+
+xnvme_lba_range_from_slba_elba
+------------------------------
+
+.. doxygenfunction:: xnvme_lba_range_from_slba_elba
+
+
+.. _sec-c-api-xnvme-func-xnvme_lba_range_from_slba_naddrs:
+
+xnvme_lba_range_from_slba_naddrs
+--------------------------------
+
+.. doxygenfunction:: xnvme_lba_range_from_slba_naddrs
+
+
+.. _sec-c-api-xnvme-func-xnvme_lba_range_from_zdescr:
+
+xnvme_lba_range_from_zdescr
+---------------------------
+
+.. doxygenfunction:: xnvme_lba_range_from_zdescr
+
+
+.. _sec-c-api-xnvme-func-xnvme_lba_range_pr:
+
+xnvme_lba_range_pr
+------------------
+
+.. doxygenfunction:: xnvme_lba_range_pr
+
+
+.. _sec-c-api-xnvme-func-xnvme_queue_get_capacity:
+
+xnvme_queue_get_capacity
+------------------------
+
+.. doxygenfunction:: xnvme_queue_get_capacity
+
+
 .. _sec-c-api-xnvme-func-xnvme_queue_get_cmd_ctx:
 
 xnvme_queue_get_cmd_ctx
 -----------------------
 
 .. doxygenfunction:: xnvme_queue_get_cmd_ctx
-
-
-.. _sec-c-api-xnvme-func-xnvme_queue_get_depth:
-
-xnvme_queue_get_depth
----------------------
-
-.. doxygenfunction:: xnvme_queue_get_capacity
 
 
 .. _sec-c-api-xnvme-func-xnvme_queue_get_outstanding:
