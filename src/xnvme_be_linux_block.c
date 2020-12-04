@@ -433,14 +433,14 @@ _idfy_ns(struct xnvme_dev *dev, void *dbuf)
 }
 
 int
-_idfy(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf)
+_idfy(struct xnvme_cmd_ctx *ctx, void *dbuf)
 {
 	struct xnvme_spec_znd_idfy_ctrlr *zctrlr = dbuf;
 	const int buf_len = 0x1000;
 	char buf[buf_len];
 	int is_zoned;
 
-	xnvme_be_linux_sysfs_dev_attr_to_buf(dev, "queue/zoned", buf, buf_len);
+	xnvme_be_linux_sysfs_dev_attr_to_buf(ctx->dev, "queue/zoned", buf, buf_len);
 	is_zoned = strncmp("host-managed", buf, 12) == 0;
 
 	// TODO: convert sysfs size to idfy.ctrlr.ncap
@@ -453,10 +453,10 @@ _idfy(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf)
 			XNVME_DEBUG("FAILED: device is not zoned");
 			goto failed;
 		}
-		return _idfy_ns_iocs(dev, dbuf);
+		return _idfy_ns_iocs(ctx->dev, dbuf);
 
 	case XNVME_SPEC_IDFY_NS:
-		return _idfy_ns(dev, dbuf);
+		return _idfy_ns(ctx->dev, dbuf);
 
 	///< TODO: check that device supports the given csi
 	case XNVME_SPEC_IDFY_CTRLR_IOCS:
@@ -469,7 +469,7 @@ _idfy(struct xnvme_dev *dev, struct xnvme_cmd_ctx *ctx, void *dbuf)
 		break;
 
 	case XNVME_SPEC_IDFY_CTRLR:
-		return _idfy_ctrlr(dev, dbuf);
+		return _idfy_ctrlr(ctx->dev, dbuf);
 
 	default:
 		goto failed;
@@ -492,7 +492,7 @@ xnvme_be_linux_block_cmd_admin(struct xnvme_cmd_ctx *ctx, void *dbuf,
 {
 	switch (ctx->cmd.common.opcode) {
 	case XNVME_SPEC_ADM_OPC_IDFY:
-		return _idfy(ctx->dev, NULL, dbuf);
+		return _idfy(ctx, dbuf);
 
 	case XNVME_SPEC_ADM_OPC_LOG:
 		XNVME_DEBUG("FAILED: not implemented yet.");
