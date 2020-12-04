@@ -140,8 +140,7 @@ _lzbd_ioctl_rprt(struct xnvme_dev *dev, uint64_t zslba, uint32_t nzones,
 	report->sector = zslba << (dev->ssw - LINUX_BLOCK_SSW);
 	report->nr_zones = nzones;
 
-	XNVME_DEBUG("sector: 0x%llx, nr_zones: %u", report->sector,
-		    report->nr_zones);
+	XNVME_DEBUG("sector: 0x%llx, nr_zones: %u", report->sector, report->nr_zones);
 
 	return ioctl(state->fd, BLKREPORTZONE, report);
 }
@@ -171,8 +170,7 @@ _lzbd_ioctl_zblk_to_descr(struct xnvme_dev *dev, struct blk_zone_report *lzbd_rp
 	// them as offline
 	zdescr->zt = XNVME_SPEC_ZND_TYPE_SEQWR;
 	zdescr->zs = (blkz->type == XNVME_SPEC_ZND_TYPE_SEQWR) ? \
-		     blkz->cond : \
-		     XNVME_SPEC_ZND_STATE_OFFLINE;
+		     blkz->cond : XNVME_SPEC_ZND_STATE_OFFLINE;
 
 	return 0;
 }
@@ -277,8 +275,7 @@ _lzbd_zone_mgmt_recv(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes)
 			uint64_t cur = nvme_rprt->nzones;
 
 			///< Accumulate nzones
-			if (!((!zone_state) || \
-			      (zone_state == lzbd_rprt->zones[i].cond))) {
+			if (!((!zone_state) || (zone_state == lzbd_rprt->zones[i].cond))) {
 				XNVME_DEBUG("INFO: skipping i: %zu", i);
 				continue;
 			}
@@ -294,7 +291,8 @@ _lzbd_zone_mgmt_recv(struct xnvme_cmd_ctx *ctx, void *dbuf, size_t dbuf_nbytes)
 				}
 			}
 
-			_lzbd_ioctl_zblk_to_descr(ctx->dev, lzbd_rprt, &lzbd_rprt->zones[i], &nvme_descr[cur]);
+			_lzbd_ioctl_zblk_to_descr(ctx->dev, lzbd_rprt, &lzbd_rprt->zones[i],
+						  &nvme_descr[cur]);
 		}
 	}
 
@@ -349,9 +347,7 @@ _idfy_ctrlr(struct xnvme_dev *dev, void *dbuf)
 	uint64_t val;
 	int err;
 
-	err = xnvme_be_linux_sysfs_dev_attr_to_num(dev,
-			"queue/max_hw_sectors_kb",
-			&val);
+	err = xnvme_be_linux_sysfs_dev_attr_to_num(dev, "queue/max_hw_sectors_kb", &val);
 	if (err) {
 		XNVME_DEBUG("FAILED: reading 'max_hw_sectors_kb' from sysfs");
 		return err;

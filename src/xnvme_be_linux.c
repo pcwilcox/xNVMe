@@ -118,8 +118,7 @@ xnvme_be_linux_sysfs_dev_attr_to_buf(struct xnvme_dev *dev, const char *attr,
 }
 
 int
-xnvme_be_linux_sysfs_dev_attr_to_num(struct xnvme_dev *dev, const char *attr,
-				     uint64_t *num)
+xnvme_be_linux_sysfs_dev_attr_to_num(struct xnvme_dev *dev, const char *attr, uint64_t *num)
 {
 	const int buf_len = 0x1000;
 	char buf[buf_len];
@@ -142,8 +141,8 @@ xnvme_be_linux_sysfs_dev_attr_to_num(struct xnvme_dev *dev, const char *attr,
 }
 
 void *
-xnvme_be_linux_buf_alloc(const struct xnvme_dev *XNVME_UNUSED(dev),
-			 size_t nbytes, uint64_t *XNVME_UNUSED(phys))
+xnvme_be_linux_buf_alloc(const struct xnvme_dev *XNVME_UNUSED(dev), size_t nbytes,
+			 uint64_t *XNVME_UNUSED(phys))
 {
 	// TODO: register buffer when async=iou
 
@@ -152,9 +151,8 @@ xnvme_be_linux_buf_alloc(const struct xnvme_dev *XNVME_UNUSED(dev),
 }
 
 void *
-xnvme_be_linux_buf_realloc(const struct xnvme_dev *XNVME_UNUSED(dev),
-			   void *XNVME_UNUSED(buf), size_t XNVME_UNUSED(nbytes),
-			   uint64_t *XNVME_UNUSED(phys))
+xnvme_be_linux_buf_realloc(const struct xnvme_dev *XNVME_UNUSED(dev), void *XNVME_UNUSED(buf),
+			   size_t XNVME_UNUSED(nbytes), uint64_t *XNVME_UNUSED(phys))
 {
 	XNVME_DEBUG("FAILED: xnvme_be_linux: does not support realloc");
 	errno = ENOSYS;
@@ -170,8 +168,8 @@ xnvme_be_linux_buf_free(const struct xnvme_dev *XNVME_UNUSED(dev), void *buf)
 }
 
 int
-xnvme_be_linux_buf_vtophys(const struct xnvme_dev *XNVME_UNUSED(dev),
-			   void *XNVME_UNUSED(buf), uint64_t *XNVME_UNUSED(phys))
+xnvme_be_linux_buf_vtophys(const struct xnvme_dev *XNVME_UNUSED(dev), void *XNVME_UNUSED(buf),
+			   uint64_t *XNVME_UNUSED(phys))
 {
 	XNVME_DEBUG("FAILED: xnvme_be_linux: does not support phys/DMA alloc");
 	return -ENOSYS;
@@ -405,8 +403,7 @@ exit:
 }
 
 int
-xnvme_be_linux_dev_from_ident(const struct xnvme_ident *ident,
-			      struct xnvme_dev **dev)
+xnvme_be_linux_dev_from_ident(const struct xnvme_ident *ident, struct xnvme_dev **dev)
 {
 	int err;
 
