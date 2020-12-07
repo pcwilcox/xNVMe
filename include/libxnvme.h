@@ -308,11 +308,12 @@ struct xnvme_cmd_ctx {
 		void *cb_arg;			///< User defined callback function arguments
 	} async;
 
+	///< Field containing command-options, the field is initialized by helper-functions
 	uint32_t opts;
 
 	uint8_t be_rsvd[4];		///< Fields reserved for use by library internals
 
-	///< Field for including command-context struct in singly-linked-lists
+	///< Field for including the command-context in BSD-style singly-linked-lists (SLIST)
 	SLIST_ENTRY(xnvme_cmd_ctx) link;
 };
 
@@ -339,7 +340,7 @@ struct xnvme_cmd_ctx
 xnvme_cmd_ctx_from_dev(struct xnvme_dev *dev);
 
 /**
- * Retrieve a command-text for issuing commands to the given queue
+ * Retrieve a command-text for issuing commands via the given queue
  *
  * @param queue Pointer to the ::xnvme_queue to retrieve a command-context for
  *
@@ -359,8 +360,6 @@ xnvme_cmd_ctx_clear(struct xnvme_cmd_ctx *ctx);
 
 /**
  * Encapsulate completion-error checking here for now.
- *
- * @todo re-think this
  *
  * @param ctx Pointer to the ::xnvme_cmd_ctx to check status on
  *
