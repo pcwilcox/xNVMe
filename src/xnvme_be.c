@@ -684,7 +684,7 @@ xnvme_be_factory(const char *uri, struct xnvme_dev **dev)
 		}
 
 		err = be->dev.dev_from_ident(&ident, dev);
-		switch(err < 0 ? -err : err) {
+		switch (err < 0 ? -err : err) {
 		case EPERM:
 			XNVME_DEBUG("INFO: failed and stop trying");
 			return err;
