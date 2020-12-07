@@ -41,10 +41,51 @@ Known Issues
   - When enabling the use of ``io_uring`` or ``libaio`` via
     ``?async={iou,aio}``, then all async. commands are sent via the chosen
     async. path. Take note, that these async. paths only supports read and
-    write.  Commands such as the Simple-Copy-Command, Append, and
+    write. Commands such as the Simple-Copy-Command, Append, and
     Zone-Management are not supported in upstream Linux in this manner. This
     means, as a user that you must sent non-read/write commands with mode
     ``XNVME_CMD_SYNC``.
+
+v0.0.22
+-------
+
+This release contains a major refactoring of the API along with a handful of
+minor fixes. The refactoring goals are to align to existing nomenclature and
+simplify usage.
+
+* Reduce to four abstractions: devices, queues, commands, and command-contexts
+  - Devices are base handles to NVMe Namespaces and a list of devices are
+    retrieved via ``xnvme_enumerate()``, and handles to individual devices
+    retrieved via ``xnvme_dev_open()`` and released via ``xnvme_dev_close()``.
+  - The abstraction formerly known as an ``asynchronous context`` is now dubbed
+    a ``queue``. The ``queue`` now has a ``capacity`` instead of a ``depth``.
+  - ``queues`` are created on top of ``devices`` and belong to the device.
+  - The definition, submission, and completion of a command is encapsulated in
+    a context; the command-context. The command-context replaces the previous
+    abstraction named the ``request``.
+  - A command can reach a device via a ``queue``, in a deferred / asynchronous
+    callback-based manner, or it go via the device in a synchronous / blocking
+    manner. Regardless, the command needs a context, and the context is
+    retrieved via ``xnvme_cmd_ctx_from_queue()`` or
+    ``xnvme_cmd_ctx_from_dev()``.
+  - Commands are passed down via ``xnvme_cmd_pass`` for NVMe IO Commands, and
+    through ``xnvme_cmd_pass_admin`` for NVMe Admin Commands via the given
+    command-context.
+
+* Reduce core API to minimal set of functions
+  - Device Handling: enumerate, dev_open, dev_close
+  - Memory: alloc, realloc, free, vtophys, virt_alloc, virt_free
+  - Queueing: init, term, poke, wait, get_command_ctx, get_capacity, get_outstanding
+  - Commands: pass, pass_admin
+  - The manual allocation of a request-pool / command-context-pool is no longer
+    needed. xNVMe does not prevent you from creating one if you want to, but it
+    is no longer required. Each 'queue' now provides a pre-allocated pool of
+    resources, and the manual request-pool is thus replaced by a call to the
+    function ``xnvme_cmd_ctx_from_queue()``. If you are familiar with
+    ``io_uring`` then think of this function as the equivalent of
+    ``io_uring_get_sqe()``.
+
+* API organization
 
 v0.0.21
 -------
